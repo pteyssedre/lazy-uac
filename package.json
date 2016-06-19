@@ -2,8 +2,8 @@
   "name": "lazy-uac",
   "version": "0.0.1",
   "description": "layer of user access control.",
-  "main": "dist/uac.js",
-  "typings": "dist/uac",
+  "main": "dist/index.js",
+  "typings": "dist/index",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
