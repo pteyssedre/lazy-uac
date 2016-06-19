@@ -1,0 +1,32 @@
+{
+  "name": "lazy-uac",
+  "version": "0.0.1",
+  "description": "layer of user access control.",
+  "main": "dist/uac.js",
+  "typings": "dist/uac",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "user",
+    "access",
+    "control",
+    "user-management",
+    "login",
+    "authentication"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://pteyssedre@bitbucket.org/pteyssedre/lazy-uac.git"
+  },
+  "author": {
+    "name": "pteyssedre",
+    "email": "pierre@teyssedre.ca"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "lazyboyjs": "0.0.6",
+    "typings": "^1.2.0"
+  }
+}

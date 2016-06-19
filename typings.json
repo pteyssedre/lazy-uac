@@ -1,0 +1,7 @@
+{
+  "name": "lazy-uac",
+  "dependencies": {},
+  "globalDependencies": {
+    "bcrypt-nodejs": "registry:dt/bcrypt-nodejs#0.0.0+20160316155526"
+  }
+}
