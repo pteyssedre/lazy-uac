@@ -6,40 +6,43 @@ import {DataService} from "./service/data.service";
 import User = DataModel.User;
 import Role = DataModel.Role;
 import UacDBA = DataService.UacDBA;
+import DataSourceException = DataService.DataSourceException;
 
 export module LazyUAC {
 
-    export class DataSourceException extends Error {
-        constructor(public message: string) {
-            super(message);
-        }
-    }
-
     export class UserManager {
-        _dataSource: UacDBA;
+        private _dataSource: UacDBA;
 
-        constructor(dataSource: UacDBA) {
+        constructor(dataSource?: UacDBA) {
             this._dataSource = dataSource;
+            if (!this._dataSource) {
+                this._dataSource = new DataService.LazyDataServer();
+            }
             this._ValidateDataSource();
         }
 
-        AddUser(user: User, callback: (error: Error, valid: User)=>void): void {
+        /**
+         *
+         * @param user {User}
+         * @param callback {function(error:Error, user:User)}
+         */
+        public AddUser(user: User, callback: (error: Error, user: User)=>void): void {
             this._ValidateDataSource();
             var round = Math.floor(Math.random() * Math.floor((Math.random() * 100)));
             bcrypt.genSalt(round, (error: any, salt: string): void=> {
                 if (error) {
                     return callback(error, null);
                 }
-                bcrypt.hash(user.Password, salt, (error: any, encrypted: string): void=> {
+                bcrypt.hash(user.Password, salt, (error: DataSourceException, encrypted: string): void=> {
                     if (error) {
                         return callback(error, null);
                     }
                     user.Password = encrypted;
-                    this._dataSource.GetUserAsync(user, (error: any, response: any): void=> {
+                    this._dataSource.GetUserAsync(user, (error: DataSourceException, response: User): void=> {
                         if (error) {
                             return callback(error, null);
                         }
-                        user.Id = response.id;
+                        user.Id = response.Id;
                         delete user.Password;
                         return callback(null, user);
                     });
@@ -47,18 +50,18 @@ export module LazyUAC {
             });
         }
 
-        ValidateAuthentication(user: User, callback: (error: Error, valid: User)=>void): void {
+        public ValidateAuthentication(user: User, callback: (error: Error, valid: User)=>void): void {
             this._ValidateDataSource();
             if (!user) {
                 throw new Error("no user provided");
             }
-            this._dataSource.GetUserAsync(user, (error: any, response: User): void=> {
+            this._dataSource.GetUserAsync(user, (error: DataSourceException, response: User): void=> {
                 if (error) {
                     return callback(error, null);
                 }
                 let u = response;
 
-                bcrypt.compare(user.Password, u.Password, (error: any, same: boolean): void=> {
+                bcrypt.compare(user.Password, u.Password, (error: DataSourceException, same: boolean): void=> {
                     if (error) {
                         return callback(error, null);
                     }
@@ -71,27 +74,27 @@ export module LazyUAC {
             });
         }
 
-        AddRolesToUser(userId: string, roles: Role[], callback: (error: Error, valid: boolean)=>void): void {
+        public AddRolesToUser(userId: string, roles: Role[], callback: (error: Error, valid: boolean)=>void): void {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserIdAsync(userId, (error: any, response: User): void=> {
+            this._dataSource.GetUserByUserIdAsync(userId, (error: DataSourceException, response: User): void=> {
                 if (error) {
                     return callback(error, null);
                 }
                 if (!response) {
-                    return callback(new Error("no user found"), null);
+                    return callback(new DataSourceException("no user found"), null);
                 }
                 var done = this._UpdateRoles(response, roles);
                 return callback(null, done);
             });
         }
 
-        _ValidateDataSource(): void {
+        private _ValidateDataSource(): void {
             if (!this._dataSource) {
                 throw new DataSourceException("data source can't be null");
             }
         }
 
-        _UpdateRoles(u: User, rs: Role[]): boolean {
+        private _UpdateRoles(u: User, rs: Role[]): boolean {
             if (!u) {
                 throw new DataSourceException("no user");
             }
@@ -106,7 +109,7 @@ export module LazyUAC {
             return u.Roles.length >= rs.length;
         }
 
-        _UserAsOneOfRoles(a: User, b: Role[]): boolean {
+        private _UserAsOneOfRoles(a: User, b: Role[]): boolean {
             if (!a) {
                 throw new DataSourceException("no user");
             }

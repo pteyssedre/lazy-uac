@@ -1,27 +1,23 @@
 /// <reference path="../typings/index.d.ts" />
 "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 var bcrypt = require("bcrypt-nodejs");
+var data_service_1 = require("./service/data.service");
+var DataSourceException = data_service_1.DataService.DataSourceException;
 var LazyUAC;
 (function (LazyUAC) {
-    var DataSourceException = (function (_super) {
-        __extends(DataSourceException, _super);
-        function DataSourceException(message) {
-            _super.call(this, message);
-            this.message = message;
-        }
-        return DataSourceException;
-    }(Error));
-    LazyUAC.DataSourceException = DataSourceException;
     var UserManager = (function () {
         function UserManager(dataSource) {
             this._dataSource = dataSource;
+            if (!this._dataSource) {
+                this._dataSource = new data_service_1.DataService.LazyDataServer();
+            }
             this._ValidateDataSource();
         }
+        /**
+         *
+         * @param user {User}
+         * @param callback {function(error:Error, user:User)}
+         */
         UserManager.prototype.AddUser = function (user, callback) {
             var _this = this;
             this._ValidateDataSource();
@@ -39,7 +35,7 @@ var LazyUAC;
                         if (error) {
                             return callback(error, null);
                         }
-                        user.Id = response.id;
+                        user.Id = response.Id;
                         delete user.Password;
                         return callback(null, user);
                     });
@@ -76,7 +72,7 @@ var LazyUAC;
                     return callback(error, null);
                 }
                 if (!response) {
-                    return callback(new Error("no user found"), null);
+                    return callback(new DataSourceException("no user found"), null);
                 }
                 var done = _this._UpdateRoles(response, roles);
                 return callback(null, done);

@@ -5,18 +5,19 @@ import User = DataModel.User;
 import Role = DataModel.Role;
 import UacDBA = DataService.UacDBA;
 export declare module LazyUAC {
-    class DataSourceException extends Error {
-        message: string;
-        constructor(message: string);
-    }
     class UserManager {
-        _dataSource: UacDBA;
-        constructor(dataSource: UacDBA);
-        AddUser(user: User, callback: (error: Error, valid: User) => void): void;
+        private _dataSource;
+        constructor(dataSource?: UacDBA);
+        /**
+         *
+         * @param user {User}
+         * @param callback {function(error:Error, user:User)}
+         */
+        AddUser(user: User, callback: (error: Error, user: User) => void): void;
         ValidateAuthentication(user: User, callback: (error: Error, valid: User) => void): void;
         AddRolesToUser(userId: string, roles: Role[], callback: (error: Error, valid: boolean) => void): void;
-        _ValidateDataSource(): void;
-        _UpdateRoles(u: User, rs: Role[]): boolean;
-        _UserAsOneOfRoles(a: User, b: Role[]): boolean;
+        private _ValidateDataSource();
+        private _UpdateRoles(u, rs);
+        private _UserAsOneOfRoles(a, b);
     }
 }
