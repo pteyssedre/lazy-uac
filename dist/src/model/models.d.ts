@@ -11,4 +11,11 @@ export declare module DataModel {
         Password: string;
         Roles: Role[];
     }
+    class Profile {
+        UserId: string;
+        Description: string;
+        Avatar: string;
+        PublicKey: string;
+        PrivateKey: string;
+    }
 }

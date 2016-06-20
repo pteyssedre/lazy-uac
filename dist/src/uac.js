@@ -82,6 +82,9 @@ var LazyUAC;
             if (!this._dataSource) {
                 throw new DataSourceException("data source can't be null");
             }
+            while (!this._dataSource.isReady) {
+            }
+            console.log("looks like it's ready");
         };
         UserManager.prototype._UpdateRoles = function (u, rs) {
             if (!u) {

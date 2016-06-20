@@ -92,6 +92,9 @@ export module LazyUAC {
             if (!this._dataSource) {
                 throw new DataSourceException("data source can't be null");
             }
+            while (!this._dataSource.isReady) {
+            }
+            console.log("looks like it's ready");
         }
 
         private _UpdateRoles(u: User, rs: Role[]): boolean {

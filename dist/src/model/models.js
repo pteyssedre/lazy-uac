@@ -13,4 +13,10 @@ var DataModel;
         return User;
     }());
     DataModel.User = User;
+    var Profile = (function () {
+        function Profile() {
+        }
+        return Profile;
+    }());
+    DataModel.Profile = Profile;
 })(DataModel = exports.DataModel || (exports.DataModel = {}));

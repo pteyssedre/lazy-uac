@@ -15,5 +15,12 @@ export module DataModel {
         public Roles: Role[];
     }
 
+    export class Profile{
+        public UserId: string;
+        public Description: string;
+        public Avatar: string;
+        public PublicKey: string;
+        public PrivateKey: string;
+    }
 
 }

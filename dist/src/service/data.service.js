@@ -6,44 +6,50 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var lazyboyjs_1 = require("lazyboyjs");
+var LazyBoy = lazyboyjs_1.lazyboyjs.LazyBoy;
 var DataService;
 (function (DataService) {
-    var DataSourceException = (function (_super) {
-        __extends(DataSourceException, _super);
-        function DataSourceException(message) {
-            _super.call(this, message);
-            this.message = message;
-        }
-        return DataSourceException;
-    }(Error));
-    DataService.DataSourceException = DataSourceException;
     var LazyDataServer = (function () {
         function LazyDataServer(options) {
+            this.isReady = false;
             this.Options = options;
             this._validateOptions();
-            this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(options.LazyBoyOptions);
-            //TODO: init lazyboy for data
+            this.LazyBoy = new LazyBoy(this.Options.LazyBoyOptions);
+            this.LazyBoy
+                .Databases(this.Options.credential_db, this.Options.profile_db)
+                .InitializeAllDatabases(this._onDatabasesInitialized);
         }
         LazyDataServer.prototype._validateOptions = function () {
+            var _this = this;
+            var instance = this;
+            this._onDatabasesInitialized = function (error, report) {
+                if (error) {
+                    return console.error("ERROR", new Date(), JSON.stringify(error), error);
+                }
+                else {
+                    instance.isReady = true;
+                }
+                console.log(report);
+                _this.LazyBoy.Connect();
+            };
             if (!this.Options) {
                 this.Options = {
                     credential_db: "auth",
-                    profile_db: "profile",
-                    LazyBoyOptions: {
-                        prefix: "uac"
-                    }
+                    profile_db: "profile"
                 };
             }
-            //TODO: validate LazyBoyOptions prefix
-            this._injectLazyViews();
-        };
-        LazyDataServer.prototype._injectLazyViews = function () {
             if (this.Options.LazyBoyOptions) {
-                var name = "TODO";
-                var view = { version: 1, type: "javascript", views: {} };
-                view.views["auth"] = { map: "function(doc){emit(doc._id, doc._rev);}", reduce: "_count()" };
-                this.Options.LazyBoyOptions.views[name] = view;
+                this.Options.LazyBoyOptions.prefix = "uac";
+                this.Options.LazyBoyOptions.autoConnect = true;
             }
+            else {
+                this.Options.LazyBoyOptions = { prefix: "uac", autoConnect: true, views: {} };
+            }
+            this._injectLazyUacViews();
+        };
+        LazyDataServer.prototype._injectLazyUacViews = function () {
+            this.Options.LazyBoyOptions.views["uac_" + this.Options.credential_db] = userViews;
+            this.Options.LazyBoyOptions.views["uac_" + this.Options.profile_db] = profileViews;
         };
         LazyDataServer.prototype.UserExistAsync = function (userId, callback) {
         };
@@ -62,4 +68,40 @@ var DataService;
         return LazyDataServer;
     }());
     DataService.LazyDataServer = LazyDataServer;
+    var userByEmail = {
+        map: "function(doc){ if(doc.instance.hasOwnProperty('Email')){ emit(doc.instance.Email, doc.instance ); }}",
+        reduce: "_count()"
+    };
+    var userByUserId = {
+        map: "function(doc){ if(doc.instance.hasOwnProperty('Id')) { emit(doc.instance.Id, doc.instance); } }",
+        reduce: "_count()"
+    };
+    var userViews = {
+        version: 1,
+        type: 'javascript',
+        views: {
+            'userByUserId': userByUserId,
+            'userByEmail': userByEmail,
+        }
+    };
+    var profileByUserId = {
+        map: "function(doc){ if(doc.instance.hasOwnProperty('UserId')){ emit(doc.instance.UserId, doc.instance); }}",
+        reduce: "_count()"
+    };
+    var profileViews = {
+        version: 1,
+        type: 'javascript',
+        views: {
+            'profileByUserId': profileByUserId,
+        }
+    };
+    var DataSourceException = (function (_super) {
+        __extends(DataSourceException, _super);
+        function DataSourceException(message) {
+            _super.call(this, message);
+            this.message = message;
+        }
+        return DataSourceException;
+    }(Error));
+    DataService.DataSourceException = DataSourceException;
 })(DataService = exports.DataService || (exports.DataService = {}));
