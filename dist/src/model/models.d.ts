@@ -10,6 +10,12 @@ export declare module DataModel {
         Email: string;
         Password: string;
         Roles: Role[];
+        constructor(firstName: string, lastName: string, email: string);
+        AddPassword(password: string, callback: () => void): void;
+        AddPasswordSync(password: string): void;
+        ComparePassword(password: string, callback: (match: boolean) => void): void;
+        ComparePasswordSync(password: string): boolean;
+        private cryptingProgress();
     }
     class Profile {
         UserId: string;
