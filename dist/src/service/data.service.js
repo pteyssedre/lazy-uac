@@ -6,31 +6,43 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var lazyboyjs_1 = require("lazyboyjs");
-var LazyBoy = lazyboyjs_1.lazyboyjs.LazyBoy;
 var DataService;
 (function (DataService) {
+    var DbCreateStatus = lazyboyjs_1.lazyboyjs.DbCreateStatus;
     var LazyDataServer = (function () {
         function LazyDataServer(options) {
             this.isReady = false;
             this.Options = options;
             this._validateOptions();
-            this.LazyBoy = new LazyBoy(this.Options.LazyBoyOptions);
+            this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
+        }
+        LazyDataServer.prototype.Connect = function (callback) {
+            this._connectCallback = callback;
             this.LazyBoy
                 .Databases(this.Options.credential_db, this.Options.profile_db)
                 .InitializeAllDatabases(this._onDatabasesInitialized);
-        }
+        };
         LazyDataServer.prototype._validateOptions = function () {
             var _this = this;
             var instance = this;
             this._onDatabasesInitialized = function (error, report) {
                 if (error) {
-                    return console.error("ERROR", new Date(), JSON.stringify(error), error);
+                    console.error("ERROR", new Date(), JSON.stringify(error), error);
+                    throw error;
                 }
                 else {
                     instance.isReady = true;
                 }
-                console.log(report);
-                _this.LazyBoy.Connect();
+                if (report.success.length == 2 && report.success.filter(function (l) {
+                    var valid = DbCreateStatus.UpToDate | DbCreateStatus.Created;
+                    return !!(l.status & valid);
+                })) {
+                    _this.LazyBoy.Connect();
+                    _this._connectCallback(null, report);
+                }
+                else {
+                    _this._connectCallback(new DataSourceException("Databases were not generated properly"), null);
+                }
             };
             if (!this.Options) {
                 this.Options = {
@@ -51,7 +63,15 @@ var DataService;
             this.Options.LazyBoyOptions.views["uac_" + this.Options.credential_db] = userViews;
             this.Options.LazyBoyOptions.views["uac_" + this.Options.profile_db] = profileViews;
         };
-        LazyDataServer.prototype.UserExistAsync = function (userId, callback) {
+        LazyDataServer.prototype.UserExistAsync = function (email, callback) {
+            this.LazyBoy.GetViewResult(this.Options.credential_db, "userByEmail", email, function (error, result) {
+                if (error) {
+                    console.log("ERROR", new Date(), error);
+                    throw error;
+                }
+                console.log("DEBUG", new Date(), result);
+                callback(error, false); //TODO: change that !!
+            });
         };
         LazyDataServer.prototype.GetUserAsync = function (user, callback) {
         };
@@ -60,6 +80,30 @@ var DataService;
         LazyDataServer.prototype.GetUserByUsernameAsync = function (username, callback) {
         };
         LazyDataServer.prototype.InsertUserAsync = function (user, callback) {
+            var _this = this;
+            this.UserExistAsync(user.Email, function (error, result) {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                if (!result) {
+                    var entry = lazyboyjs_1.lazyboyjs.LazyBoy.NewEntry(user, "user");
+                    _this.LazyBoy.AddEntry(_this.Options.credential_db, entry, function (error, code, entry) {
+                        if (error) {
+                            console.error("ERROR", new Date(), error, code);
+                            throw error;
+                        }
+                        console.log("DEBUG", new Date(), entry);
+                        switch (code) {
+                            case lazyboyjs_1.lazyboyjs.InstanceCreateStatus.Created:
+                                break;
+                            case lazyboyjs_1.lazyboyjs.InstanceCreateStatus.Conflict:
+                                break;
+                        }
+                    });
+                }
+                callback(error, result);
+            });
         };
         LazyDataServer.prototype.UpdateUserAsync = function (user, callback) {
         };

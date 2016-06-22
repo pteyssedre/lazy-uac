@@ -13,12 +13,13 @@ var DataModel;
         };
         return Utils;
     }());
-    var Role = (function () {
-        function Role() {
-        }
-        return Role;
-    }());
-    DataModel.Role = Role;
+    (function (Role) {
+        Role[Role["VIEWER"] = 1] = "VIEWER";
+        Role[Role["USER"] = 2] = "USER";
+        Role[Role["ADMIN"] = 4] = "ADMIN";
+        Role[Role["SUPER_ADMIN"] = 8] = "SUPER_ADMIN";
+    })(DataModel.Role || (DataModel.Role = {}));
+    var Role = DataModel.Role;
     var User = (function () {
         function User(firstName, lastName, email) {
             this.Id = Utils.newGuid();
@@ -61,6 +62,7 @@ var DataModel;
             bcript.compare(password, this.Password, function (error, result) {
                 if (error) {
                     console.error("ERROR", new Date(), error);
+                    throw error;
                 }
                 callback(result);
             });
@@ -76,7 +78,8 @@ var DataModel;
     }());
     DataModel.User = User;
     var Profile = (function () {
-        function Profile() {
+        function Profile(user) {
+            this.UserId = user.Id;
         }
         return Profile;
     }());

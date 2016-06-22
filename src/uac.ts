@@ -3,17 +3,15 @@
 import * as bcrypt from "bcrypt-nodejs";
 import {DataModel} from "./model/models";
 import {DataService} from "./service/data.service";
-import User = DataModel.User;
-import Role = DataModel.Role;
-import UacDBA = DataService.UacDBA;
 import DataSourceException = DataService.DataSourceException;
 
 export module LazyUAC {
 
+    import User = DataModel.User;
     export class UserManager {
-        private _dataSource: UacDBA;
+        private _dataSource: DataService.UacDBA;
 
-        constructor(dataSource?: UacDBA) {
+        constructor(dataSource?: DataService.UacDBA) {
             this._dataSource = dataSource;
             if (!this._dataSource) {
                 this._dataSource = new DataService.LazyDataServer();
@@ -21,70 +19,54 @@ export module LazyUAC {
             this._ValidateDataSource();
         }
 
+        public StartManager(callback: (error: Error, result: any)=>void): void {
+            this._dataSource.Connect((error: Error, result: any): void => {
+                callback(error, result);
+            });
+        }
+
         /**
-         *
+         * In order to add a user to the system, we add VIEWER and USER role to the user.
          * @param user {User}
          * @param callback {function(error:Error, user:User)}
          */
-        public AddUser(user: User, callback: (error: Error, user: User)=>void): void {
+        public AddUser(user: DataModel.User, callback: (error: Error, user: DataModel.User) => void): void {
             this._ValidateDataSource();
-            var round = Math.floor(Math.random() * Math.floor((Math.random() * 100)));
-            bcrypt.genSalt(round, (error: any, salt: string): void=> {
+            user.Roles |= DataModel.Role.VIEWER | DataModel.Role.USER;
+            this._dataSource.InsertUserAsync(user, (error: Error, result: any): void => {
                 if (error) {
-                    return callback(error, null);
+                    console.error("ERROR", new Date(), error);
+                    throw error;
                 }
-                bcrypt.hash(user.Password, salt, (error: DataSourceException, encrypted: string): void=> {
-                    if (error) {
-                        return callback(error, null);
-                    }
-                    user.Password = encrypted;
-                    this._dataSource.GetUserAsync(user, (error: DataSourceException, response: User): void=> {
-                        if (error) {
-                            return callback(error, null);
-                        }
-                        user.Id = response.Id;
-                        delete user.Password;
-                        return callback(null, user);
-                    });
+                callback(error, result);
+            });
+        }
+
+        public Authenticate(username: string, password: string, callback: (match: boolean) => void) {
+            this._ValidateDataSource();
+            this._dataSource.GetUserByUsernameAsync(username, (error: Error, user: DataModel.User): void => {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                user.ComparePassword(password, (match: boolean): void => {
+                    callback(match);
                 });
             });
         }
 
-        public ValidateAuthentication(user: User, callback: (error: Error, valid: User)=>void): void {
+        public AddRolesToUser(userId: string, role: DataModel.Role, callback: (error: DataSourceException, valid: boolean)=>void): void {
             this._ValidateDataSource();
-            if (!user) {
-                throw new Error("no user provided");
-            }
-            this._dataSource.GetUserAsync(user, (error: DataSourceException, response: User): void=> {
+            this._dataSource.GetUserByUserIdAsync(userId, (error: DataSourceException, user: DataModel.User): void=> {
                 if (error) {
-                    return callback(error, null);
+                    console.error("ERROR", new Date(), error);
+                    throw error;
                 }
-                let u = response;
-
-                bcrypt.compare(user.Password, u.Password, (error: DataSourceException, same: boolean): void=> {
-                    if (error) {
-                        return callback(error, null);
-                    }
-                    if (!same) {
-                        return callback(null, null);
-                    }
-                    delete u.Password;
-                    return callback(null, u);
-                });
-            });
-        }
-
-        public AddRolesToUser(userId: string, roles: Role[], callback: (error: Error, valid: boolean)=>void): void {
-            this._ValidateDataSource();
-            this._dataSource.GetUserByUserIdAsync(userId, (error: DataSourceException, response: User): void=> {
-                if (error) {
-                    return callback(error, null);
-                }
-                if (!response) {
+                if (!user) {
                     return callback(new DataSourceException("no user found"), null);
                 }
-                var done = this._UpdateRoles(response, roles);
-                return callback(null, done);
+                user.Roles |= role;
+                return callback(null, true);
             });
         }
 
@@ -92,42 +74,6 @@ export module LazyUAC {
             if (!this._dataSource) {
                 throw new DataSourceException("data source can't be null");
             }
-            while (!this._dataSource.isReady) {
-            }
-            console.log("looks like it's ready");
         }
-
-        private _UpdateRoles(u: User, rs: Role[]): boolean {
-            if (!u) {
-                throw new DataSourceException("no user");
-            }
-            var a = u.Roles.concat(rs);
-            for (var i = 0; i < a.length; ++i) {
-                for (var j = i + 1; j < a.length; ++j) {
-                    if (a[i].id === a[j].id)
-                        a.splice(j--, 1);
-                }
-            }
-            u.Roles = a;
-            return u.Roles.length >= rs.length;
-        }
-
-        private _UserAsOneOfRoles(a: User, b: Role[]): boolean {
-            if (!a) {
-                throw new DataSourceException("no user");
-            }
-            if (a.Roles.length == 0) {
-                return false;
-            }
-            for (var r of b) {
-                for (var r1 of a.Roles) {
-                    if (r1.id == r.id) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
     }
 }

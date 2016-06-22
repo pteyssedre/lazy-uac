@@ -1,23 +1,23 @@
 /// <reference path="../../../typings/index.d.ts" />
 import { lazyboyjs } from "lazyboyjs";
-import LazyOptions = lazyboyjs.LazyOptions;
 import { DataModel } from "../model/models";
-import User = DataModel.User;
 export declare module DataService {
     class LazyDataServer implements UacDBA {
         private LazyBoy;
         private Options;
         private _onDatabasesInitialized;
         isReady: boolean;
+        private _connectCallback;
         constructor(options?: LazyDataSourceConfig);
+        Connect(callback: Callback): void;
         private _validateOptions();
         private _injectLazyUacViews();
-        UserExistAsync(userId: string, callback: DataService.Callback): void;
-        GetUserAsync(user: User, callback: DataService.Callback): void;
+        UserExistAsync(email: string, callback: DataService.Callback): void;
+        GetUserAsync(user: DataModel.User, callback: DataService.Callback): void;
         GetUserByUserIdAsync(userId: string, callback: DataService.Callback): void;
         GetUserByUsernameAsync(username: string, callback: DataService.Callback): void;
-        InsertUserAsync(user: User, callback: DataService.Callback): void;
-        UpdateUserAsync(user: User, callback: DataService.Callback): void;
+        InsertUserAsync(user: DataModel.User, callback: DataService.Callback): void;
+        UpdateUserAsync(user: DataModel.User, callback: DataService.Callback): void;
         DeleteUserAsync(userId: string, callback: DataService.Callback): void;
     }
     class DataSourceException extends Error {
@@ -30,16 +30,17 @@ export declare module DataService {
     interface LazyDataSourceConfig {
         credential_db: string;
         profile_db: string;
-        LazyBoyOptions?: LazyOptions;
+        LazyBoyOptions?: lazyboyjs.LazyOptions;
     }
     interface UacDBA {
+        Connect(callback: Callback): void;
         isReady: boolean;
-        UserExistAsync(userId: string, callback: Callback): void;
-        GetUserAsync(user: User, callback: Callback): void;
+        UserExistAsync(email: string, callback: Callback): void;
+        GetUserAsync(user: DataModel.User, callback: Callback): void;
         GetUserByUserIdAsync(userId: string, callback: Callback): void;
         GetUserByUsernameAsync(username: string, callback: Callback): void;
-        InsertUserAsync(user: User, callback: Callback): void;
-        UpdateUserAsync(user: User, callback: Callback): void;
+        InsertUserAsync(user: DataModel.User, callback: Callback): void;
+        UpdateUserAsync(user: DataModel.User, callback: Callback): void;
         DeleteUserAsync(userId: string, callback: Callback): void;
     }
 }

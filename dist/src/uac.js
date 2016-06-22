@@ -1,6 +1,6 @@
 /// <reference path="../typings/index.d.ts" />
 "use strict";
-var bcrypt = require("bcrypt-nodejs");
+var models_1 = require("./model/models");
 var data_service_1 = require("./service/data.service");
 var DataSourceException = data_service_1.DataService.DataSourceException;
 var LazyUAC;
@@ -13,110 +13,57 @@ var LazyUAC;
             }
             this._ValidateDataSource();
         }
+        UserManager.prototype.StartManager = function (callback) {
+            this._dataSource.Connect(function (error, result) {
+                callback(error, result);
+            });
+        };
         /**
-         *
+         * In order to add a user to the system, we add VIEWER and USER role to the user.
          * @param user {User}
          * @param callback {function(error:Error, user:User)}
          */
         UserManager.prototype.AddUser = function (user, callback) {
-            var _this = this;
             this._ValidateDataSource();
-            var round = Math.floor(Math.random() * Math.floor((Math.random() * 100)));
-            bcrypt.genSalt(round, function (error, salt) {
+            user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
+            this._dataSource.InsertUserAsync(user, function (error, result) {
                 if (error) {
-                    return callback(error, null);
+                    console.error("ERROR", new Date(), error);
+                    throw error;
                 }
-                bcrypt.hash(user.Password, salt, function (error, encrypted) {
-                    if (error) {
-                        return callback(error, null);
-                    }
-                    user.Password = encrypted;
-                    _this._dataSource.GetUserAsync(user, function (error, response) {
-                        if (error) {
-                            return callback(error, null);
-                        }
-                        user.Id = response.Id;
-                        delete user.Password;
-                        return callback(null, user);
-                    });
+                callback(error, result);
+            });
+        };
+        UserManager.prototype.Authenticate = function (username, password, callback) {
+            this._ValidateDataSource();
+            this._dataSource.GetUserByUsernameAsync(username, function (error, user) {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                user.ComparePassword(password, function (match) {
+                    callback(match);
                 });
             });
         };
-        UserManager.prototype.ValidateAuthentication = function (user, callback) {
+        UserManager.prototype.AddRolesToUser = function (userId, role, callback) {
             this._ValidateDataSource();
-            if (!user) {
-                throw new Error("no user provided");
-            }
-            this._dataSource.GetUserAsync(user, function (error, response) {
+            this._dataSource.GetUserByUserIdAsync(userId, function (error, user) {
                 if (error) {
-                    return callback(error, null);
+                    console.error("ERROR", new Date(), error);
+                    throw error;
                 }
-                var u = response;
-                bcrypt.compare(user.Password, u.Password, function (error, same) {
-                    if (error) {
-                        return callback(error, null);
-                    }
-                    if (!same) {
-                        return callback(null, null);
-                    }
-                    delete u.Password;
-                    return callback(null, u);
-                });
-            });
-        };
-        UserManager.prototype.AddRolesToUser = function (userId, roles, callback) {
-            var _this = this;
-            this._ValidateDataSource();
-            this._dataSource.GetUserByUserIdAsync(userId, function (error, response) {
-                if (error) {
-                    return callback(error, null);
-                }
-                if (!response) {
+                if (!user) {
                     return callback(new DataSourceException("no user found"), null);
                 }
-                var done = _this._UpdateRoles(response, roles);
-                return callback(null, done);
+                user.Roles |= role;
+                return callback(null, true);
             });
         };
         UserManager.prototype._ValidateDataSource = function () {
             if (!this._dataSource) {
                 throw new DataSourceException("data source can't be null");
             }
-            while (!this._dataSource.isReady) {
-            }
-            console.log("looks like it's ready");
-        };
-        UserManager.prototype._UpdateRoles = function (u, rs) {
-            if (!u) {
-                throw new DataSourceException("no user");
-            }
-            var a = u.Roles.concat(rs);
-            for (var i = 0; i < a.length; ++i) {
-                for (var j = i + 1; j < a.length; ++j) {
-                    if (a[i].id === a[j].id)
-                        a.splice(j--, 1);
-                }
-            }
-            u.Roles = a;
-            return u.Roles.length >= rs.length;
-        };
-        UserManager.prototype._UserAsOneOfRoles = function (a, b) {
-            if (!a) {
-                throw new DataSourceException("no user");
-            }
-            if (a.Roles.length == 0) {
-                return false;
-            }
-            for (var _i = 0, b_1 = b; _i < b_1.length; _i++) {
-                var r = b_1[_i];
-                for (var _a = 0, _b = a.Roles; _a < _b.length; _a++) {
-                    var r1 = _b[_a];
-                    if (r1.id == r.id) {
-                        return true;
-                    }
-                }
-            }
-            return false;
         };
         return UserManager;
     }());

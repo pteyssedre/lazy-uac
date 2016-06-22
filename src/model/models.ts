@@ -10,10 +10,12 @@ export module DataModel {
             });
         }
     }
-
-    export class Role {
-        public id: string;
-        public name: string;
+    
+    export enum Role {
+        VIEWER = 1,
+        USER = 1 << 1,
+        ADMIN = 1 << 2,
+        SUPER_ADMIN = 1 << 3
     }
 
     export class User {
@@ -22,7 +24,7 @@ export module DataModel {
         public LastName: string;
         public Email: string;
         public Password: string;
-        public Roles: Role[];
+        public Roles: Role;
 
         constructor(firstName: string, lastName: string, email: string) {
             this.Id = Utils.newGuid();
@@ -31,7 +33,7 @@ export module DataModel {
             this.Email = email;
         }
 
-        public AddPassword(password: string, callback: ()=>void) {
+        public AddPassword(password: string, callback: ()=>void): void {
             let it = this;
             let round = (Math.floor(Math.random() * 10) + 1);
             console.log("DEBUG", new Date(), "Generating Salt", round);
@@ -53,7 +55,7 @@ export module DataModel {
             });
         }
 
-        public AddPasswordSync(password: string) {
+        public AddPasswordSync(password: string): void {
             let it = this;
             let round = (Math.floor(Math.random() * 10) + 1);
             console.log("DEBUG", new Date(), "Generating Salt", round);
@@ -68,6 +70,7 @@ export module DataModel {
             bcript.compare(password, this.Password, (error: Error, result: boolean): void => {
                 if (error) {
                     console.error("ERROR", new Date(), error);
+                    throw error;
                 }
                 callback(result);
             });
@@ -90,6 +93,10 @@ export module DataModel {
         public Avatar: string;
         public PublicKey: string;
         public PrivateKey: string;
+
+        constructor(user: User) {
+            this.UserId = user.Id;
+        }
     }
 
 }
