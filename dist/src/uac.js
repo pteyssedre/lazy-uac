@@ -35,6 +35,7 @@ var LazyUAC;
             });
         };
         UserManager.prototype.Authenticate = function (username, password, callback) {
+            console.log("INFO", new Date(), "Authenticating", username);
             this._ValidateDataSource();
             this._dataSource.GetUserByUsernameAsync(username, function (error, user) {
                 if (error) {

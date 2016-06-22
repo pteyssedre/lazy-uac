@@ -64,20 +64,36 @@ var DataService;
             this.Options.LazyBoyOptions.views["uac_" + this.Options.profile_db] = profileViews;
         };
         LazyDataServer.prototype.UserExistAsync = function (email, callback) {
-            this.LazyBoy.GetViewResult(this.Options.credential_db, "userByEmail", email, function (error, result) {
+            this.GetUserByUsernameAsync(email, function (error, data) {
                 if (error) {
-                    console.log("ERROR", new Date(), error);
+                    console.error("ERROR", new Date(), error);
                     throw error;
                 }
-                console.log("DEBUG", new Date(), result);
-                callback(error, false); //TODO: change that !!
+                //TODO: add code to explain with its false ...
+                callback(null, data.length > 0);
             });
         };
         LazyDataServer.prototype.GetUserAsync = function (user, callback) {
         };
         LazyDataServer.prototype.GetUserByUserIdAsync = function (userId, callback) {
+            this.LazyBoy.GetViewResult(this.Options.credential_db, "userByUserId", { key: userId, reduce: false }, function (error, result) {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                console.log("DEBUG", new Date(), JSON.stringify(result));
+                callback(null, result);
+            });
         };
         LazyDataServer.prototype.GetUserByUsernameAsync = function (username, callback) {
+            this.LazyBoy.GetViewResult(this.Options.credential_db, "userByEmail", { key: username, reduce: false }, function (error, result) {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                console.log("DEBUG", new Date(), JSON.stringify(result));
+                callback(null, result);
+            });
         };
         LazyDataServer.prototype.InsertUserAsync = function (user, callback) {
             var _this = this;
@@ -96,13 +112,21 @@ var DataService;
                         console.log("DEBUG", new Date(), entry);
                         switch (code) {
                             case lazyboyjs_1.lazyboyjs.InstanceCreateStatus.Created:
+                                console.log("INFO", new Date(), "Instance Created");
                                 break;
                             case lazyboyjs_1.lazyboyjs.InstanceCreateStatus.Conflict:
+                                console.log("INFO", new Date(), "Instance Conflict");
+                                break;
+                            default:
+                                console.log("INFO", new Date(), "code", code);
                                 break;
                         }
                     });
+                    callback(error, result);
                 }
-                callback(error, result);
+                else {
+                    callback(new DataSourceException("user already exist"), null);
+                }
             });
         };
         LazyDataServer.prototype.UpdateUserAsync = function (user, callback) {

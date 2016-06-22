@@ -1,8 +1,8 @@
 /// <reference path="../../typings/index.d.ts"/>
 
-import {lazyboyjs} from  "lazyboyjs";
+import { lazyboyjs } from  "lazyboyjs";
 
-import {DataModel} from "../model/models";
+import { DataModel } from "../model/models";
 
 export module DataService {
 
@@ -70,27 +70,47 @@ export module DataService {
         }
 
         public UserExistAsync(email: string, callback: DataService.Callback): void {
-            this.LazyBoy.GetViewResult(
-                this.Options.credential_db,
-                "userByEmail",
-                email,
-                (error: Error, result: any): void => {
-                    if (error) {
-                        console.log("ERROR", new Date(), error);
-                        throw error;
-                    }
-                    console.log("DEBUG", new Date(), result);
-                    callback(error, false); //TODO: change that !!
-                });
+            this.GetUserByUsernameAsync(email, (error: Error, data: any): void => {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                //TODO: add code to explain with its false ...
+                callback(null, data.length > 0);
+            });
         }
 
         public GetUserAsync(user: DataModel.User, callback: DataService.Callback): void {
         }
 
         public GetUserByUserIdAsync(userId: string, callback: DataService.Callback): void {
+            this.LazyBoy.GetViewResult(
+                this.Options.credential_db,
+                "userByUserId",
+                {key: userId, reduce: false},
+                (error: Error, result: any): void => {
+                    if (error) {
+                        console.error("ERROR", new Date(), error);
+                        throw error;
+                    }
+                    console.log("DEBUG", new Date(), JSON.stringify(result));
+                    callback(null, result);
+                });
         }
 
         public GetUserByUsernameAsync(username: string, callback: DataService.Callback): void {
+            this.LazyBoy.GetViewResult(
+                this.Options.credential_db,
+                "userByEmail",
+                {key: username, reduce: false},
+                (error: Error, result: any): void => {
+                    if (error) {
+                        console.error("ERROR", new Date(), error);
+                        throw error;
+                    }
+                    console.log("DEBUG", new Date(), JSON.stringify(result));
+                    callback(null, result);
+                });
         }
 
         public InsertUserAsync(user: DataModel.User, callback: DataService.Callback): void {
@@ -112,13 +132,20 @@ export module DataService {
                             console.log("DEBUG", new Date(), entry);
                             switch (code) {
                                 case lazyboyjs.InstanceCreateStatus.Created:
+                                    console.log("INFO", new Date(), "Instance Created");
                                     break;
                                 case lazyboyjs.InstanceCreateStatus.Conflict:
+                                    console.log("INFO", new Date(), "Instance Conflict");
+                                    break;
+                                default:
+                                    console.log("INFO", new Date(), "code", code);
                                     break;
                             }
                         });
+                    callback(error, result);
+                } else {
+                    callback(new DataSourceException("user already exist"), null);
                 }
-                callback(error, result);
             });
         }
 

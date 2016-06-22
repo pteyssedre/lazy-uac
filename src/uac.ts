@@ -1,8 +1,8 @@
 /// <reference path="../typings/index.d.ts" />
 
 import * as bcrypt from "bcrypt-nodejs";
-import {DataModel} from "./model/models";
-import {DataService} from "./service/data.service";
+import { DataModel } from "./model/models";
+import { DataService } from "./service/data.service";
 import DataSourceException = DataService.DataSourceException;
 
 export module LazyUAC {
@@ -43,6 +43,7 @@ export module LazyUAC {
         }
 
         public Authenticate(username: string, password: string, callback: (match: boolean) => void) {
+            console.log("INFO", new Date(), "Authenticating", username);
             this._ValidateDataSource();
             this._dataSource.GetUserByUsernameAsync(username, (error: Error, user: DataModel.User): void => {
                 if (error) {
