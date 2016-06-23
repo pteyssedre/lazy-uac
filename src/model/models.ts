@@ -19,6 +19,7 @@ export module DataModel {
     }
 
     export class User {
+
         public Id: string;
         public FirstName: string;
         public LastName: string;
@@ -86,6 +87,14 @@ export module DataModel {
 
         private cryptingProgress(): void {
             //console.log("DEBUG", new Date(), "in progress");
+        }
+
+        public extend<T, U>(obj: T, extension: U) {
+            Object.keys(obj).forEach((key) => {
+                extension[key] = obj[key];
+            });
+
+            return extension as T & U;
         }
     }
 

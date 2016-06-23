@@ -55,11 +55,18 @@ describe('DataModel', function () {
 });
 describe('lazyUAC', function () {
 
+    var mockPassword = "Reacts987";
+    var mockUser = new DataModel.User("Pierre",
+        "Teyssedre",
+        "pierre@teyssedre.ca",
+        mockPassword,
+        DataModel.Role.VIEWER | DataModel.Role.USER
+    );
+
     describe('Default options test', function () {
         it('Should create UAC databases and connect to them', function () {
             var uac = new LazyUAC.UserManager();
             expect(uac).to.not.equal(null);
-            var user = new DataModel.User();
         });
     });
     describe('Adding User in db', function () {
@@ -68,39 +75,37 @@ describe('lazyUAC', function () {
             uac.StartManager(function (error, result) {
                 expect(error).to.equal(null);
                 expect(result).to.not.equal(null);
-                var user = new DataModel.User("Pierre", "Teyssedre", "pierre@teyssedre.ca");
-                user.AddPasswordSync("Reacts987");
-                uac.AddUser(user, function (error, result) {
-                    console.log(error, result);
+                uac.AddUser(mockUser, function (error, result) {
+                    expect(error).to.equal(null);
+                    expect(result).to.not.equal(null);
                     done();
                 });
             });
         });
-        it('Should create an User and insert it inside the db', function (done) {
+        it('Should validate the insertion of the user in the db', function (done) {
             var uac = new LazyUAC.UserManager();
             uac.StartManager(function (error, result) {
                 expect(error).to.equal(null);
                 expect(result).to.not.equal(null);
-                uac.Authenticate("pierre@teyssedre.ca", "Reacts987", function (error, result) {
+                uac.GetUserByUserName(mockUser.Email, function (user) {
+                    expect(error).to.equal(null);
+                    expect(user.Id).to.equal(mockUser.Id);
+                    done();
+                });
+            });
+        });
+        it('Should authenticated the user and return a object', function (done) {
+            var uac = new LazyUAC.UserManager();
+            uac.StartManager(function (error, result) {
+                expect(error).to.equal(null);
+                expect(result).to.not.equal(null);
+                uac.Authenticate(mockUser.Email, mockPassword, function (error, result) {
                     if (error) {
                         console.error("ERROR", new Date(), error);
                         throw error;
                     }
                     expect(error).to.equal(null);
                     expect(result).to.equal(null);
-                    done();
-                });
-            });
-        });
-        it('Should delete an User from the db', function (done) {
-            var uac = new LazyUAC.UserManager();
-            uac.StartManager(function (error, result) {
-                expect(error).to.equal(null);
-                expect(result).to.not.equal(null);
-                uac.GetUserByUserName("pierre@teyssedre.ca", function (user) {
-                    expect(error).to.equal(null);
-                    expect(user).to.not.equal(null);
-                    expect(user.ComparePasswordSync("Reacts987")).to.equal(true);
                     done();
                 });
             });

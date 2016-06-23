@@ -1,14 +1,11 @@
 /// <reference path="../../typings/index.d.ts"/>
 
-import { lazyboyjs } from  "lazyboyjs";
+import {lazyboyjs} from  "lazyboyjs";
 
-import { DataModel } from "../model/models";
+import {DataModel} from "../model/models";
 
 export module DataService {
 
-
-    import DbCreateStatus = lazyboyjs.DbCreateStatus;
-    import User = DataModel.User;
     export class LazyDataServer implements UacDBA {
 
         private LazyBoy: lazyboyjs.LazyBoy;
@@ -41,13 +38,13 @@ export module DataService {
                     instance.isReady = true;
                 }
                 if (report.success.length == 2 && report.success.filter((l): boolean=> {
-                        let valid = DbCreateStatus.UpToDate | DbCreateStatus.Created;
+                        let valid = lazyboyjs.DbCreateStatus.UpToDate | lazyboyjs.DbCreateStatus.Created;
                         return !!(l.status & valid);
                     })) {
                     this.LazyBoy.Connect();
                     this._connectCallback(null, report);
                 } else {
-                    this._connectCallback(new DataSourceException("Databases were not generated properly"), null);
+                    this._connectCallback(new DataSourceException("Databases were not generated properly", UserCodeException.NOT_FOUND), report);
                 }
             };
             if (!this.Options) {
@@ -71,13 +68,27 @@ export module DataService {
         }
 
         public UserExistAsync(email: string, callback: DataService.Callback): void {
-            this.GetUserByUsernameAsync(email, (error: Error, data: any): void => {
+            this.GetUserByUsernameAsync(email, (error: DataService.DataSourceException, data: any): void => {
                 if (error) {
                     console.error("ERROR", new Date(), error);
-                    throw error;
+                    if (error.code) {
+                        switch (error.code) {
+                            case DataService.UserCodeException.NOT_FOUND:
+                                break;
+                            case DataService.UserCodeException.ALREADY_EXIST:
+                                break;
+                            case DataService.UserCodeException.DUPLICATE_FOUND:
+                                break;
+                            default:
+                                throw error;
+                        }
+                    } else {
+                        throw error;
+                    }
+                } else {
+                    console.log(data);
+                    callback(null, data.length > 0);
                 }
-                //TODO: add code to explain with its false ...
-                callback(null, data.length > 0);
             });
         }
 
@@ -99,7 +110,9 @@ export module DataService {
                 });
         }
 
-        public GetUserByUsernameAsync(username: string, callback: DataService.Callback): void {
+        public GetUserByUsernameAsync(username: string,
+                                      callback: (error: DataService.DataSourceException,
+                                                 user: DataModel.User)=>void): void {
             this.LazyBoy.GetViewResult(
                 this.Options.credential_db,
                 "userByEmail",
@@ -110,9 +123,13 @@ export module DataService {
                         throw error;
                     }
                     if (result.length == 0) {
-                        return callback(new DataSourceException("no user found"), null);
+                        return callback(
+                            new DataSourceException("no user found", UserCodeException.NOT_FOUND),
+                            null);
                     } else if (result.length > 1) {
-                        return callback(new DataSourceException("more than one user was found"), null);
+                        return callback(
+                            new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND),
+                            null);
                     }
                     let v = result[0].value;
                     let u = new DataModel.User();
@@ -154,9 +171,9 @@ export module DataService {
                                     break;
                             }
                         });
-                    callback(error, result);
+                    callback(null, result);
                 } else {
-                    callback(new DataSourceException("user already exist"), null);
+                    callback(new DataSourceException("user already exist", UserCodeException.ALREADY_EXIST), null);
                 }
             });
         }
@@ -197,8 +214,14 @@ export module DataService {
         }
     };
 
+    export enum UserCodeException {
+        NOT_FOUND = 0,
+        ALREADY_EXIST = 1,
+        DUPLICATE_FOUND = 2
+    }
+
     export class DataSourceException extends Error {
-        constructor(public message: string) {
+        constructor(public message: string, public code?: UserCodeException) {
             super(message);
         }
     }
@@ -213,6 +236,9 @@ export module DataService {
         LazyBoyOptions?: lazyboyjs.LazyOptions
     }
 
+    /**
+     * Interface representing the requirements for a valid DataSource Object.
+     */
     export interface UacDBA {
         Connect(callback: Callback): void;
         isReady: boolean;

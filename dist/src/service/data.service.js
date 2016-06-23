@@ -9,7 +9,6 @@ var lazyboyjs_1 = require("lazyboyjs");
 var models_1 = require("../model/models");
 var DataService;
 (function (DataService) {
-    var DbCreateStatus = lazyboyjs_1.lazyboyjs.DbCreateStatus;
     var LazyDataServer = (function () {
         function LazyDataServer(options) {
             this.isReady = false;
@@ -35,14 +34,14 @@ var DataService;
                     instance.isReady = true;
                 }
                 if (report.success.length == 2 && report.success.filter(function (l) {
-                    var valid = DbCreateStatus.UpToDate | DbCreateStatus.Created;
+                    var valid = lazyboyjs_1.lazyboyjs.DbCreateStatus.UpToDate | lazyboyjs_1.lazyboyjs.DbCreateStatus.Created;
                     return !!(l.status & valid);
                 })) {
                     _this.LazyBoy.Connect();
                     _this._connectCallback(null, report);
                 }
                 else {
-                    _this._connectCallback(new DataSourceException("Databases were not generated properly"), null);
+                    _this._connectCallback(new DataSourceException("Databases were not generated properly", UserCodeException.NOT_FOUND), report);
                 }
             };
             if (!this.Options) {
@@ -68,10 +67,26 @@ var DataService;
             this.GetUserByUsernameAsync(email, function (error, data) {
                 if (error) {
                     console.error("ERROR", new Date(), error);
-                    throw error;
+                    if (error.code) {
+                        switch (error.code) {
+                            case DataService.UserCodeException.NOT_FOUND:
+                                break;
+                            case DataService.UserCodeException.ALREADY_EXIST:
+                                break;
+                            case DataService.UserCodeException.DUPLICATE_FOUND:
+                                break;
+                            default:
+                                throw error;
+                        }
+                    }
+                    else {
+                        throw error;
+                    }
                 }
-                //TODO: add code to explain with its false ...
-                callback(null, data.length > 0);
+                else {
+                    console.log(data);
+                    callback(null, data.length > 0);
+                }
             });
         };
         LazyDataServer.prototype.GetUserAsync = function (user, callback) {
@@ -93,10 +108,10 @@ var DataService;
                     throw error;
                 }
                 if (result.length == 0) {
-                    return callback(new DataSourceException("no user found"), null);
+                    return callback(new DataSourceException("no user found", UserCodeException.NOT_FOUND), null);
                 }
                 else if (result.length > 1) {
-                    return callback(new DataSourceException("more than one user was found"), null);
+                    return callback(new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND), null);
                 }
                 var v = result[0].value;
                 var u = new models_1.DataModel.User();
@@ -135,10 +150,10 @@ var DataService;
                                 break;
                         }
                     });
-                    callback(error, result);
+                    callback(null, result);
                 }
                 else {
-                    callback(new DataSourceException("user already exist"), null);
+                    callback(new DataSourceException("user already exist", UserCodeException.ALREADY_EXIST), null);
                 }
             });
         };
@@ -176,11 +191,18 @@ var DataService;
             'profileByUserId': profileByUserId,
         }
     };
+    (function (UserCodeException) {
+        UserCodeException[UserCodeException["NOT_FOUND"] = 0] = "NOT_FOUND";
+        UserCodeException[UserCodeException["ALREADY_EXIST"] = 1] = "ALREADY_EXIST";
+        UserCodeException[UserCodeException["DUPLICATE_FOUND"] = 2] = "DUPLICATE_FOUND";
+    })(DataService.UserCodeException || (DataService.UserCodeException = {}));
+    var UserCodeException = DataService.UserCodeException;
     var DataSourceException = (function (_super) {
         __extends(DataSourceException, _super);
-        function DataSourceException(message) {
+        function DataSourceException(message, code) {
             _super.call(this, message);
             this.message = message;
+            this.code = code;
         }
         return DataSourceException;
     }(Error));
