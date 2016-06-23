@@ -14,6 +14,7 @@ export declare module LazyUAC {
          */
         AddUser(user: DataModel.User, callback: (error: Error, user: DataModel.User) => void): void;
         Authenticate(username: string, password: string, callback: (match: boolean) => void): void;
+        GetUserByUserName(username: string, callback: (user: DataModel.User) => void): void;
         AddRolesToUser(userId: string, role: DataModel.Role, callback: (error: DataSourceException, valid: boolean) => void): void;
         private _ValidateDataSource();
     }

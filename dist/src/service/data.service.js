@@ -6,6 +6,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var lazyboyjs_1 = require("lazyboyjs");
+var models_1 = require("../model/models");
 var DataService;
 (function (DataService) {
     var DbCreateStatus = lazyboyjs_1.lazyboyjs.DbCreateStatus;
@@ -91,8 +92,20 @@ var DataService;
                     console.error("ERROR", new Date(), error);
                     throw error;
                 }
-                console.log("DEBUG", new Date(), JSON.stringify(result));
-                callback(null, result);
+                if (result.length == 0) {
+                    return callback(new DataSourceException("no user found"), null);
+                }
+                else if (result.length > 1) {
+                    return callback(new DataSourceException("more than one user was found"), null);
+                }
+                var v = result[0].value;
+                var u = new models_1.DataModel.User();
+                var keys = Object.keys(v);
+                for (var i = 0; i < keys.length; i++) {
+                    var p = keys[i];
+                    u[p] = v[p];
+                }
+                callback(null, u);
             });
         };
         LazyDataServer.prototype.InsertUserAsync = function (user, callback) {

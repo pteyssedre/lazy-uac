@@ -12,7 +12,7 @@ export declare module DataModel {
         Email: string;
         Password: string;
         Roles: Role;
-        constructor(firstName: string, lastName: string, email: string);
+        constructor(firstName?: string, lastName?: string, email?: string, password?: string, roles?: Role);
         AddPassword(password: string, callback: () => void): void;
         AddPasswordSync(password: string): void;
         ComparePassword(password: string, callback: (match: boolean) => void): void;

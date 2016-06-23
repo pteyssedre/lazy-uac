@@ -21,11 +21,13 @@ var DataModel;
     })(DataModel.Role || (DataModel.Role = {}));
     var Role = DataModel.Role;
     var User = (function () {
-        function User(firstName, lastName, email) {
+        function User(firstName, lastName, email, password, roles) {
             this.Id = Utils.newGuid();
             this.FirstName = firstName;
             this.LastName = lastName;
             this.Email = email;
+            this.Password = password;
+            this.Roles = roles;
         }
         User.prototype.AddPassword = function (password, callback) {
             var it = this;

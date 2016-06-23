@@ -10,7 +10,7 @@ export module DataModel {
             });
         }
     }
-    
+
     export enum Role {
         VIEWER = 1,
         USER = 1 << 1,
@@ -26,11 +26,13 @@ export module DataModel {
         public Password: string;
         public Roles: Role;
 
-        constructor(firstName: string, lastName: string, email: string) {
+        constructor(firstName?: string, lastName?: string, email?: string, password?: string, roles?: Role) {
             this.Id = Utils.newGuid();
             this.FirstName = firstName;
             this.LastName = lastName;
             this.Email = email;
+            this.Password = password;
+            this.Roles = roles;
         }
 
         public AddPassword(password: string, callback: ()=>void): void {

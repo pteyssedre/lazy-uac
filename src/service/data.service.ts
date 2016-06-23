@@ -8,6 +8,7 @@ export module DataService {
 
 
     import DbCreateStatus = lazyboyjs.DbCreateStatus;
+    import User = DataModel.User;
     export class LazyDataServer implements UacDBA {
 
         private LazyBoy: lazyboyjs.LazyBoy;
@@ -108,8 +109,19 @@ export module DataService {
                         console.error("ERROR", new Date(), error);
                         throw error;
                     }
-                    console.log("DEBUG", new Date(), JSON.stringify(result));
-                    callback(null, result);
+                    if (result.length == 0) {
+                        return callback(new DataSourceException("no user found"), null);
+                    } else if (result.length > 1) {
+                        return callback(new DataSourceException("more than one user was found"), null);
+                    }
+                    let v = result[0].value;
+                    let u = new DataModel.User();
+                    let keys = Object.keys(v);
+                    for (var i = 0; i < keys.length; i++) {
+                        let p = keys[i];
+                        u[p] = v[p];
+                    }
+                    callback(null, u);
                 });
         }
 

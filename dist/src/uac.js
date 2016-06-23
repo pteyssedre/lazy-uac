@@ -24,14 +24,24 @@ var LazyUAC;
          * @param callback {function(error:Error, user:User)}
          */
         UserManager.prototype.AddUser = function (user, callback) {
+            var _this = this;
             this._ValidateDataSource();
             user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
-            this._dataSource.InsertUserAsync(user, function (error, result) {
+            this._dataSource.GetUserByUsernameAsync(user.Email, function (error, fetch) {
                 if (error) {
                     console.error("ERROR", new Date(), error);
                     throw error;
                 }
-                callback(error, result);
+                if (fetch) {
+                    callback(new Error("None unique email"), user);
+                }
+                _this._dataSource.InsertUserAsync(user, function (error, result) {
+                    if (error) {
+                        console.error("ERROR", new Date(), error);
+                        throw error;
+                    }
+                    callback(error, result);
+                });
             });
         };
         UserManager.prototype.Authenticate = function (username, password, callback) {
@@ -45,6 +55,16 @@ var LazyUAC;
                 user.ComparePassword(password, function (match) {
                     callback(match);
                 });
+            });
+        };
+        UserManager.prototype.GetUserByUserName = function (username, callback) {
+            this._ValidateDataSource();
+            this._dataSource.GetUserByUsernameAsync(username, function (error, user) {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                callback(user);
             });
         };
         UserManager.prototype.AddRolesToUser = function (userId, role, callback) {

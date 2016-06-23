@@ -33,12 +33,21 @@ export module LazyUAC {
         public AddUser(user: DataModel.User, callback: (error: Error, user: DataModel.User) => void): void {
             this._ValidateDataSource();
             user.Roles |= DataModel.Role.VIEWER | DataModel.Role.USER;
-            this._dataSource.InsertUserAsync(user, (error: Error, result: any): void => {
+            this._dataSource.GetUserByUsernameAsync(user.Email, (error: DataSourceException, fetch: DataModel.User): void => {
                 if (error) {
                     console.error("ERROR", new Date(), error);
                     throw error;
                 }
-                callback(error, result);
+                if (fetch) {
+                    callback(new Error("None unique email"), user);
+                }
+                this._dataSource.InsertUserAsync(user, (error: Error, result: any): void => {
+                    if (error) {
+                        console.error("ERROR", new Date(), error);
+                        throw error;
+                    }
+                    callback(error, result);
+                });
             });
         }
 
@@ -53,6 +62,17 @@ export module LazyUAC {
                 user.ComparePassword(password, (match: boolean): void => {
                     callback(match);
                 });
+            });
+        }
+
+        public GetUserByUserName(username: string, callback: (user: DataModel.User) => void) {
+            this._ValidateDataSource();
+            this._dataSource.GetUserByUsernameAsync(username, (error: Error, user: DataModel.User): void => {
+                if (error) {
+                    console.error("ERROR", new Date(), error);
+                    throw error;
+                }
+                callback(user);
             });
         }
 

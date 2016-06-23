@@ -81,13 +81,26 @@ describe('lazyUAC', function () {
             uac.StartManager(function (error, result) {
                 expect(error).to.equal(null);
                 expect(result).to.not.equal(null);
-                uac.Authenticate("pierre@teyssedre.ca", "Reacts987", function(error, result){
-                    if(error){
+                uac.Authenticate("pierre@teyssedre.ca", "Reacts987", function (error, result) {
+                    if (error) {
                         console.error("ERROR", new Date(), error);
                         throw error;
                     }
                     expect(error).to.equal(null);
                     expect(result).to.equal(null);
+                    done();
+                });
+            });
+        });
+        it('Should delete an User from the db', function (done) {
+            var uac = new LazyUAC.UserManager();
+            uac.StartManager(function (error, result) {
+                expect(error).to.equal(null);
+                expect(result).to.not.equal(null);
+                uac.GetUserByUserName("pierre@teyssedre.ca", function (user) {
+                    expect(error).to.equal(null);
+                    expect(user).to.not.equal(null);
+                    expect(user.ComparePasswordSync("Reacts987")).to.equal(true);
                     done();
                 });
             });
