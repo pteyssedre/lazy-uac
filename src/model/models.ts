@@ -88,14 +88,6 @@ export module DataModel {
         private cryptingProgress(): void {
             //console.log("DEBUG", new Date(), "in progress");
         }
-
-        public extend<T, U>(obj: T, extension: U) {
-            Object.keys(obj).forEach((key) => {
-                extension[key] = obj[key];
-            });
-
-            return extension as T & U;
-        }
     }
 
     export class Profile {
@@ -105,8 +97,12 @@ export module DataModel {
         public PublicKey: string;
         public PrivateKey: string;
 
-        constructor(user: User) {
-            this.UserId = user.Id;
+        constructor(user?: User, description?: string, avatar?: string, pkey?: string, prkey?: string) {
+            this.UserId = user ? user.Id : '';
+            this.Description = description;
+            this.Avatar = avatar;
+            this.PublicKey = pkey;
+            this.PrivateKey = prkey;
         }
     }
 

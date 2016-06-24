@@ -18,7 +18,6 @@ export declare module DataModel {
         ComparePassword(password: string, callback: (match: boolean) => void): void;
         ComparePasswordSync(password: string): boolean;
         private cryptingProgress();
-        extend<T, U>(obj: T, extension: U): T & U;
     }
     class Profile {
         UserId: string;
@@ -26,6 +25,6 @@ export declare module DataModel {
         Avatar: string;
         PublicKey: string;
         PrivateKey: string;
-        constructor(user: User);
+        constructor(user?: User, description?: string, avatar?: string, pkey?: string, prkey?: string);
     }
 }

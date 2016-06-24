@@ -76,18 +76,16 @@ var DataModel;
         User.prototype.cryptingProgress = function () {
             //console.log("DEBUG", new Date(), "in progress");
         };
-        User.prototype.extend = function (obj, extension) {
-            Object.keys(obj).forEach(function (key) {
-                extension[key] = obj[key];
-            });
-            return extension;
-        };
         return User;
     }());
     DataModel.User = User;
     var Profile = (function () {
-        function Profile(user) {
-            this.UserId = user.Id;
+        function Profile(user, description, avatar, pkey, prkey) {
+            this.UserId = user ? user.Id : '';
+            this.Description = description;
+            this.Avatar = avatar;
+            this.PublicKey = pkey;
+            this.PrivateKey = prkey;
         }
         return Profile;
     }());
