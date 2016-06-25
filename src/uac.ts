@@ -31,15 +31,11 @@ export module LazyUAC {
          * @param user {User}
          * @param callback {function(error:Error, user:User)}
          */
-        public AddUser(user: DataModel.User, callback: (error: Error, user: DataModel.User) => void): void {
+        public AddUser(user: DataModel.User, callback: (user: DataModel.User) => void): void {
             this._ValidateDataSource();
             user.Roles |= DataModel.Role.VIEWER | DataModel.Role.USER;
-            this._dataSource.InsertUserAsync(user, (error: Error, result: any): void => {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
-                }
-                callback(error, result);
+            this._dataSource.InsertUser(user, (success: boolean): void => {
+                callback(success ? user : null);
             });
         }
 
@@ -50,17 +46,21 @@ export module LazyUAC {
          * @param callback
          */
         public Authenticate(username: string, password: string, callback: (match: boolean) => void) {
-            console.log("INFO", new Date(), "Authenticating", username);
             this._ValidateDataSource();
-            this._dataSource.GetUserByUsernameAsync(username, (error: Error, user: DataModel.User): void => {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
+            this._dataSource.GetUserByUserName(username, (user: DataModel.User): void => {
+                if (user) {
+                    user.ComparePassword(password, (match: boolean): void => {
+                        callback(match);
+                    });
+                }else{
+                    callback(false);
                 }
-                user.ComparePassword(password, (match: boolean): void => {
-                    callback(match);
-                });
             });
+        }
+
+        public DeleteUser(userId: string, callback: (deleted: boolean) => void) {
+            this._ValidateDataSource();
+            this._dataSource.DeleteUser(userId, callback);
         }
 
         /**
@@ -70,11 +70,7 @@ export module LazyUAC {
          */
         public GetUserByUserName(username: string, callback: (user: DataModel.User) => void) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUsernameAsync(username, (error: Error, user: DataModel.User): void => {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
-                }
+            this._dataSource.GetUserByUserName(username, (user: DataModel.User): void => {
                 callback(user);
             });
         }
@@ -86,18 +82,15 @@ export module LazyUAC {
          * @param role {@link DataModel.Role}
          * @param callback {function(error: Error, done: boolean)}
          */
-        public AddRolesToUser(userId: string, role: DataModel.Role, callback: (error: DataService.DataSourceException, valid: boolean)=>void): void {
+        public AddRolesToUser(userId: string, role: DataModel.Role, callback: (valid: boolean)=>void): void {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserIdAsync(userId, (error: DataService.DataSourceException, user: DataModel.User): void=> {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
+            this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void=> {
+                if (user) {
+                    user.Roles |= role;
+                    return callback(true);
+                } else {
+                    return callback(false);
                 }
-                if (!user) {
-                    return callback(new DataService.DataSourceException("No user found"), null);
-                }
-                user.Roles |= role;
-                return callback(null, true);
             });
         }
 

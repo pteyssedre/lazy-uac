@@ -32,8 +32,8 @@ export module DataModel {
             this.FirstName = firstName;
             this.LastName = lastName;
             this.Email = email;
-            this.Password = password;
             this.Roles = roles;
+            this.AddPasswordSync(password);
         }
 
         public AddPassword(password: string, callback: ()=>void): void {

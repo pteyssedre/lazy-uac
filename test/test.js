@@ -62,52 +62,42 @@ describe('lazyUAC', function () {
         mockPassword,
         DataModel.Role.VIEWER | DataModel.Role.USER
     );
+    var uac;
 
     describe('Default options test', function () {
-        it('Should create UAC databases and connect to them', function () {
-            var uac = new LazyUAC.UserManager();
+        it('Should create UAC databases and connect to them', function (done) {
+            uac = new LazyUAC.UserManager();
             expect(uac).to.not.equal(null);
-        });
-    });
-    describe('Adding User in db', function () {
-        it('Should create an User and insert it inside the db', function (done) {
-            var uac = new LazyUAC.UserManager();
             uac.StartManager(function (error, result) {
                 expect(error).to.equal(null);
                 expect(result).to.not.equal(null);
-                uac.AddUser(mockUser, function (error, result) {
-                    expect(error).to.equal(null);
-                    expect(result).to.not.equal(null);
-                    done();
-                });
+                done();
+            });
+        });
+        it('Should create an User and insert it inside the db', function (done) {
+            uac.AddUser(mockUser, function (result) {
+                expect(result).to.not.equal(null);
+                expect(result.Id).to.equal(mockUser.Id);
+                done();
             });
         });
         it('Should validate the insertion of the user in the db', function (done) {
-            var uac = new LazyUAC.UserManager();
-            uac.StartManager(function (error, result) {
-                expect(error).to.equal(null);
-                expect(result).to.not.equal(null);
-                uac.GetUserByUserName(mockUser.Email, function (user) {
-                    expect(error).to.equal(null);
-                    expect(user.Id).to.equal(mockUser.Id);
-                    done();
-                });
+            uac.GetUserByUserName(mockUser.Email, function (user) {
+                expect(user).to.not.equal(null);
+                expect(user.Id).to.equal(mockUser.Id);
+                done();
             });
         });
         it('Should authenticated the user and return a object', function (done) {
-            var uac = new LazyUAC.UserManager();
-            uac.StartManager(function (error, result) {
-                expect(error).to.equal(null);
-                expect(result).to.not.equal(null);
-                uac.Authenticate(mockUser.Email, mockPassword, function (error, result) {
-                    if (error) {
-                        console.error("ERROR", new Date(), error);
-                        throw error;
-                    }
-                    expect(error).to.equal(null);
-                    expect(result).to.equal(null);
-                    done();
-                });
+            uac.Authenticate(mockUser.Email, mockPassword, function (authenticated) {
+                expect(authenticated).to.equal(true);
+                done();
+            });
+        });
+        it('Should authenticated the user and return a object', function (done) {
+            uac.DeleteUser(mockUser.Id, function (deleted) {
+                expect(deleted).to.equal(true);
+                done();
             });
         });
     });

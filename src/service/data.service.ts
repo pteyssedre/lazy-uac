@@ -10,10 +10,8 @@ export module DataService {
 
         private LazyBoy: lazyboyjs.LazyBoy;
         private Options: LazyDataSourceConfig;
-        private _onDatabasesInitialized: lazyboyjs.DbInitializeAllCallback;
 
         public isReady: boolean = false;
-        private _connectCallback: Callback;
 
         constructor(options?: LazyDataSourceConfig) {
             this.Options = options;
@@ -22,17 +20,11 @@ export module DataService {
         }
 
         public Connect(callback: Callback): void {
-            this._connectCallback = callback;
-            this.LazyBoy
-                .Databases(this.Options.credential_db, this.Options.profile_db)
-                .InitializeAllDatabases(this._onDatabasesInitialized);
-        }
-
-        private _validateOptions(): void {
             let instance = this;
-            this._onDatabasesInitialized = (error: Error, report: lazyboyjs.ReportInitialization): void => {
+            this.LazyBoy.Databases(this.Options.credential_db, this.Options.profile_db);
+            this.LazyBoy.InitializeAllDatabases((error: Error, report: lazyboyjs.ReportInitialization): void => {
                 if (error) {
-                    console.error("ERROR", new Date(), JSON.stringify(error), error);
+                    console.error("ERROR", "_validateOptions", new Date(), JSON.stringify(error), error);
                     throw error;
                 } else {
                     instance.isReady = true;
@@ -42,11 +34,15 @@ export module DataService {
                         return !!(l.status & valid);
                     })) {
                     this.LazyBoy.Connect();
-                    this._connectCallback(null, report);
+                    console.log("INFO", new Date(), "LazyBoyConnect called");
+                    callback(null, report);
                 } else {
-                    this._connectCallback(new DataSourceException("Databases were not generated properly", UserCodeException.NOT_FOUND), report);
+                    callback(new DataSourceException("Databases were not generated properly", UserCodeException.NOT_FOUND), report);
                 }
-            };
+            });
+        }
+
+        private _validateOptions(): void {
             if (!this.Options) {
                 this.Options = {
                     credential_db: "auth",
@@ -67,131 +63,230 @@ export module DataService {
             this.Options.LazyBoyOptions.views["uac_" + this.Options.profile_db] = profileViews;
         }
 
-        public UserExistAsync(email: string, callback: DataService.Callback): void {
-            this.GetUserByUsernameAsync(email, (error: DataService.DataSourceException, data: any): void => {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    if (error.code) {
-                        switch (error.code) {
-                            case DataService.UserCodeException.NOT_FOUND:
-                                break;
-                            case DataService.UserCodeException.ALREADY_EXIST:
-                                break;
-                            case DataService.UserCodeException.DUPLICATE_FOUND:
-                                break;
-                            default:
-                                throw error;
+        /**
+         * Shorter to search entry by UserId or UserName if one of those properties exist in the {@code user}
+         * @param user {@link DataModel.User}
+         * @param callback {function(exist:boolean)}
+         * @throw {@link DataSourceException}
+         */
+        private _userExist(user: DataModel.User, callback: (exist: boolean) => void): void {
+            if (user) {
+                if (user.Id) {
+                    this._getEntryByUserId(user.Id, (entry: lazyboyjs.LazyInstance): void => {
+                        if (user.Email) {
+                            this._getEntryByUserName(user.Email, (entry: lazyboyjs.LazyInstance): void => {
+                                callback(entry != null && !entry.isDeleted);
+                            });
+                        } else {
+                            callback(entry != null && !entry.isDeleted);
                         }
-                    } else {
-                        throw error;
-                    }
+                    });
+                } else if (user.Email) {
+                    this._getEntryByUserName(user.Email, (entry: lazyboyjs.LazyInstance): void => {
+                        callback(entry != null && !entry.isDeleted);
+                    });
                 } else {
-                    console.log(data);
-                    callback(null, data.length > 0);
+                    throw new DataSourceException("invalid data");
+                }
+            } else {
+                throw new DataSourceException("invalid data");
+            }
+        }
+
+        /**
+         * Shorter to retrieve the entry {@link lazyboyjs.LazyInstance} from the database using either the
+         * UserId or the UserName property of the parameter {@code user}
+         * @param user
+         * @param callback {function(entry: lazyboyjs.LazyInstance)}
+         * @throw DataSourceException if one of {@link DataModel.User} or {@link DataModel.User#Id} or {@link DataModel.User#Email} is null.
+         */
+        private _getUserEntry(user: DataModel.User, callback: (entry: lazyboyjs.LazyInstance) => void): void {
+            if (user) {
+                if (user.Id && user.Id.length > 0) {
+                    this._getEntryByUserId(user.Id, (entry: lazyboyjs.LazyInstance): void => {
+                        callback(entry.isDeleted ? null : entry);
+                    });
+                } else if (user.Email && user.Email.length > 0) {
+                    this._getEntryByUserName(user.Email, (entry: lazyboyjs.LazyInstance): void => {
+                        callback(entry.isDeleted ? null : entry);
+                    });
+                } else {
+                    throw new DataSourceException("invalid data");
+                }
+            } else {
+                throw new DataSourceException("invalid data");
+            }
+        }
+
+        private _addUserEntry(data: any, type: string, callback: (success: boolean)=>void) {
+            let entry = lazyboyjs.LazyBoy.NewEntry(data, type);
+            this.LazyBoy.AddEntry(this.Options.credential_db, entry, (error: Error, code: lazyboyjs.InstanceCreateStatus, entry: lazyboyjs.LazyInstance): void => {
+                if (error) {
+                    console.error("ERROR", "InsertUserAsync", new Date(), error, code);
+                    throw error;
+                }
+                console.log("DEBUG", new Date(), JSON.stringify(entry));
+                switch (code) {
+                    case lazyboyjs.InstanceCreateStatus.Created:
+                        console.log("INFO", new Date(), "Instance Created");
+                        callback(true);
+                        break;
+                    case lazyboyjs.InstanceCreateStatus.Conflict:
+                        console.log("INFO", new Date(), "Instance Conflict");
+                        callback(false);
+                        break;
+                    default:
+                        console.error("ERROR", new Date(), "UNMANAGED code", code);
+                        callback(false);
+                        break;
                 }
             });
         }
 
-        public GetUserAsync(user: DataModel.User, callback: DataService.Callback): void {
-        }
-
-        public GetUserByUserIdAsync(userId: string, callback: DataService.Callback): void {
+        private _getEntryByUserId(userId: string, callback: (entry: lazyboyjs.LazyInstance)=>void): void {
             this.LazyBoy.GetViewResult(
                 this.Options.credential_db,
-                "userByUserId",
+                "entryByUserId",
                 {key: userId, reduce: false},
                 (error: Error, result: any): void => {
                     if (error) {
-                        console.error("ERROR", new Date(), error);
-                        throw error;
-                    }
-                    console.log("DEBUG", new Date(), JSON.stringify(result));
-                    callback(null, result);
-                });
-        }
-
-        public GetUserByUsernameAsync(username: string,
-                                      callback: (error: DataService.DataSourceException,
-                                                 user: DataModel.User)=>void): void {
-            this.LazyBoy.GetViewResult(
-                this.Options.credential_db,
-                "userByEmail",
-                {key: username, reduce: false},
-                (error: Error, result: any): void => {
-                    if (error) {
-                        console.error("ERROR", new Date(), error);
+                        console.error("ERROR", "_getEntryByUserId", new Date(), error);
                         throw error;
                     }
                     if (result.length == 0) {
-                        return callback(
-                            new DataSourceException("no user found", UserCodeException.NOT_FOUND),
-                            null);
+                        // throw new DataSourceException("no user found", UserCodeException.NOT_FOUND);
+                        return callback(null);
                     } else if (result.length > 1) {
-                        return callback(
-                            new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND),
-                            null);
+                        //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
+                        return callback(null);
                     }
-                    let v = result[0].value;
-                    let u = new DataModel.User();
-                    let keys = Object.keys(v);
-                    for (var i = 0; i < keys.length; i++) {
-                        let p = keys[i];
-                        u[p] = v[p];
-                    }
-                    callback(null, u);
+                    callback(result[0].value);
                 });
         }
 
-        public InsertUserAsync(user: DataModel.User, callback: DataService.Callback): void {
-            this.UserExistAsync(user.Email, (error: Error, result: boolean): void => {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
-                }
-                if (!result) {
-                    let entry = lazyboyjs.LazyBoy.NewEntry(user, "user");
-                    this.LazyBoy.AddEntry(
-                        this.Options.credential_db,
-                        entry,
-                        (error: Error, code: lazyboyjs.InstanceCreateStatus, entry: lazyboyjs.LazyInstance): void => {
-                            if (error) {
-                                console.error("ERROR", new Date(), error, code);
-                                throw error;
-                            }
-                            console.log("DEBUG", new Date(), entry);
-                            switch (code) {
-                                case lazyboyjs.InstanceCreateStatus.Created:
-                                    console.log("INFO", new Date(), "Instance Created");
-                                    break;
-                                case lazyboyjs.InstanceCreateStatus.Conflict:
-                                    console.log("INFO", new Date(), "Instance Conflict");
-                                    break;
-                                default:
-                                    console.log("INFO", new Date(), "code", code);
-                                    break;
-                            }
-                        });
-                    callback(null, result);
+        private _getEntryByUserName(username: string, callback: (entry: lazyboyjs.LazyInstance)=>void): void {
+            this.LazyBoy.GetViewResult(
+                this.Options.credential_db,
+                "entryByEmail",
+                {key: username, reduce: false},
+                (error: Error, result: any): void => {
+                    if (error) {
+                        console.error("ERROR", "_getEntryByUserName", new Date(), error);
+                        throw error;
+                    }
+                    if (result.length == 0) {
+                        // throw new DataSourceException("no user found", UserCodeException.NOT_FOUND);
+                        return callback(null);
+                    } else if (result.length > 1) {
+                        //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
+                        return callback(null);
+                    }
+                    callback(result[0].value);
+                });
+        }
+
+        private _updateUserEntry(entry: lazyboyjs.LazyInstance, callback: (updated: boolean)=>void): void {
+            this.LazyBoy.UpdateEntry(
+                this.Options.credential_db,
+                entry,
+                (error: any, updated: boolean, updatedEntry: lazyboyjs.LazyInstance): void => {
+                    if (error) {
+                        console.error("ERROR", new Date(), JSON.stringify(error));
+                        throw error;
+                    }
+                    callback(updated);
+                });
+        }
+
+        public GetUserByUserId(userId: string, callback: (user: DataModel.User)=>void): void {
+            this._getEntryByUserId(userId, (entry: lazyboyjs.LazyInstance): void=> {
+                if (entry) {
+                    let u = new DataModel.User();
+                    let keys = Object.keys(entry);
+                    for (var i = 0; i < keys.length; i++) {
+                        let p = keys[i];
+                        u[p] = entry[p];
+                    }
+                    callback(u);
                 } else {
-                    callback(new DataSourceException("user already exist", UserCodeException.ALREADY_EXIST), null);
+                    callback(null);
                 }
             });
         }
 
-        public UpdateUserAsync(user: DataModel.User, callback: DataService.Callback): void {
+        public GetUserByUserName(username: string, callback: (user: DataModel.User)=>void): void {
+            this._getEntryByUserName(username, (entry: lazyboyjs.LazyInstance): void => {
+                if (entry) {
+                    let u = new DataModel.User();
+                    let keys = Object.keys(entry.instance);
+                    for (var i = 0; i < keys.length; i++) {
+                        let p = keys[i];
+                        u[p] = entry.instance[p];
+                    }
+                    callback(u);
+                } else {
+                    callback(null);
+                }
+            });
         }
 
-        public DeleteUserAsync(userId: string, callback: DataService.Callback): void {
+        public InsertUser(user: DataModel.User, callback: (success: boolean) => void): void {
+            this._userExist(user, (exist: boolean): void => {
+                if (!exist) {
+                    this._addUserEntry(user, "user", callback);
+                } else {
+                    callback(false);
+                }
+            });
+        }
+
+        public UpdateUser(user: DataModel.User, callback: (success: boolean) => void): void {
+            this._getUserEntry(user, (entry: lazyboyjs.LazyInstance): void => {
+                if (entry) {
+                    this._updateUserEntry(entry, callback);
+                } else {
+                    callback(false);
+                }
+            });
+        }
+
+        public DeleteUser(userId: string, callback: (success: boolean) => void): void {
+            this._getEntryByUserId(userId, (entry: lazyboyjs.LazyInstance): void => {
+                if (entry) {
+                    this.LazyBoy.DeleteEntry(this.Options.credential_db, entry,
+                        (error: Error, deleted: boolean): void => {
+                            if (error) {
+                                console.error("ERROR", new Date(), JSON.stringify(error));
+                                throw error;
+                            }
+                            callback(deleted);
+                        }, false);
+                } else {
+                    callback(false);
+                }
+            });
         }
     }
 
 
     let userByEmail: lazyboyjs.LazyView = {
-        map: "function(doc){ if(doc.instance.hasOwnProperty('Email')){ emit(doc.instance.Email, doc.instance ); }}",
+        map: "function(doc){ if(doc.instance.hasOwnProperty('Email') && !doc.isDeleted){ emit(doc.instance.Email, doc.instance ); }}",
         reduce: "_count()"
     };
     let userByUserId: lazyboyjs.LazyView = {
-        map: "function(doc){ if(doc.instance.hasOwnProperty('Id')) { emit(doc.instance.Id, doc.instance); } }",
+        map: "function(doc){ if(doc.instance.hasOwnProperty('Id') && !doc.isDeleted) { emit(doc.instance.Id, doc.instance); } }",
+        reduce: "_count()"
+    };
+    let entryByEmail: lazyboyjs.LazyView = {
+        map: "function(doc){ if(doc.instance.hasOwnProperty('Email') && !doc.isDeleted){ emit(doc.instance.Email, doc); }}",
+        reduce: "_count()"
+    };
+    let entryByUserId: lazyboyjs.LazyView = {
+        map: "function(doc){ if(doc.instance.hasOwnProperty('Id') && !doc.isDeleted) { emit(doc.instance.Id, doc); } }",
+        reduce: "_count()"
+    };
+    let deletedTypeEntry: lazyboyjs.LazyView = {
+        map: "function(doc){ if(doc.isDeleted) { emit(doc.type, doc); } }",
         reduce: "_count()"
     };
     let userViews: lazyboyjs.LazyDesignViews = {
@@ -200,10 +295,13 @@ export module DataService {
         views: {
             'userByUserId': userByUserId,
             'userByEmail': userByEmail,
+            'entryByUserId': entryByUserId,
+            'entryByEmail': entryByEmail,
+            'deletedTypeEntry': deletedTypeEntry
         }
     };
     let profileByUserId: lazyboyjs.LazyView = {
-        map: "function(doc){ if(doc.instance.hasOwnProperty('UserId')){ emit(doc.instance.UserId, doc.instance); }}",
+        map: "function(doc){ if(doc.instance.hasOwnProperty('UserId') && !doc.isDeleted){ emit(doc.instance.UserId, doc.instance); }}",
         reduce: "_count()"
     };
     let profileViews: lazyboyjs.LazyDesignViews = {
@@ -215,9 +313,9 @@ export module DataService {
     };
 
     export enum UserCodeException {
-        NOT_FOUND = 0,
-        ALREADY_EXIST = 1,
-        DUPLICATE_FOUND = 2
+        NOT_FOUND = 1,
+        ALREADY_EXIST = 1 << 1,
+        DUPLICATE_FOUND = 1 << 2
     }
 
     export class DataSourceException extends Error {
@@ -240,15 +338,13 @@ export module DataService {
      * Interface representing the requirements for a valid DataSource Object.
      */
     export interface UacDBA {
-        Connect(callback: Callback): void;
         isReady: boolean;
-        UserExistAsync(email: string, callback: Callback): void;
-        GetUserAsync(user: DataModel.User, callback: Callback): void;
-        GetUserByUserIdAsync(userId: string, callback: Callback): void;
-        GetUserByUsernameAsync(username: string, callback: Callback): void;
-        InsertUserAsync(user: DataModel.User, callback: Callback): void;
-        UpdateUserAsync(user: DataModel.User, callback: Callback): void;
-        DeleteUserAsync(userId: string, callback: Callback): void;
+        Connect(callback: Callback): void;
+        GetUserByUserId(userId: string, callback: (user: DataModel.User) => void): void;
+        GetUserByUserName(username: string, callback: (user: DataModel.User) => void): void;
+        InsertUser(user: DataModel.User, callback: (success: boolean) => void): void;
+        UpdateUser(user: DataModel.User, callback: (success: boolean) => void): void;
+        DeleteUser(userId: string, callback: (success: boolean) => void): void;
     }
 
 }

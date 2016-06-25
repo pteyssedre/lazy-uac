@@ -15,7 +15,7 @@ export declare module LazyUAC {
          * @param user {User}
          * @param callback {function(error:Error, user:User)}
          */
-        AddUser(user: DataModel.User, callback: (error: Error, user: DataModel.User) => void): void;
+        AddUser(user: DataModel.User, callback: (user: DataModel.User) => void): void;
         /**
          * To produce the access string for an User, the identity of the User as to be validated.
          * @param username {string} email address to retrieve the User inside the db.
@@ -23,6 +23,7 @@ export declare module LazyUAC {
          * @param callback
          */
         Authenticate(username: string, password: string, callback: (match: boolean) => void): void;
+        DeleteUser(userId: string, callback: (deleted: boolean) => void): void;
         /**
          * To retrieve user trough database and return the only one match value.
          * @param username {string} user name to search.
@@ -36,7 +37,7 @@ export declare module LazyUAC {
          * @param role {@link DataModel.Role}
          * @param callback {function(error: Error, done: boolean)}
          */
-        AddRolesToUser(userId: string, role: DataModel.Role, callback: (error: DataService.DataSourceException, valid: boolean) => void): void;
+        AddRolesToUser(userId: string, role: DataModel.Role, callback: (valid: boolean) => void): void;
         /**
          * Helper to validate the state of the {@link _dataSource} property.
          * @private

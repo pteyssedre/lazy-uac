@@ -26,8 +26,8 @@ var DataModel;
             this.FirstName = firstName;
             this.LastName = lastName;
             this.Email = email;
-            this.Password = password;
             this.Roles = roles;
+            this.AddPasswordSync(password);
         }
         User.prototype.AddPassword = function (password, callback) {
             var it = this;

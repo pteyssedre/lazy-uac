@@ -29,12 +29,8 @@ var LazyUAC;
         UserManager.prototype.AddUser = function (user, callback) {
             this._ValidateDataSource();
             user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
-            this._dataSource.InsertUserAsync(user, function (error, result) {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
-                }
-                callback(error, result);
+            this._dataSource.InsertUser(user, function (success) {
+                callback(success ? user : null);
             });
         };
         /**
@@ -44,17 +40,21 @@ var LazyUAC;
          * @param callback
          */
         UserManager.prototype.Authenticate = function (username, password, callback) {
-            console.log("INFO", new Date(), "Authenticating", username);
             this._ValidateDataSource();
-            this._dataSource.GetUserByUsernameAsync(username, function (error, user) {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
+            this._dataSource.GetUserByUserName(username, function (user) {
+                if (user) {
+                    user.ComparePassword(password, function (match) {
+                        callback(match);
+                    });
                 }
-                user.ComparePassword(password, function (match) {
-                    callback(match);
-                });
+                else {
+                    callback(false);
+                }
             });
+        };
+        UserManager.prototype.DeleteUser = function (userId, callback) {
+            this._ValidateDataSource();
+            this._dataSource.DeleteUser(userId, callback);
         };
         /**
          * To retrieve user trough database and return the only one match value.
@@ -63,11 +63,7 @@ var LazyUAC;
          */
         UserManager.prototype.GetUserByUserName = function (username, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUsernameAsync(username, function (error, user) {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
-                }
+            this._dataSource.GetUserByUserName(username, function (user) {
                 callback(user);
             });
         };
@@ -80,16 +76,14 @@ var LazyUAC;
          */
         UserManager.prototype.AddRolesToUser = function (userId, role, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserIdAsync(userId, function (error, user) {
-                if (error) {
-                    console.error("ERROR", new Date(), error);
-                    throw error;
+            this._dataSource.GetUserByUserId(userId, function (user) {
+                if (user) {
+                    user.Roles |= role;
+                    return callback(true);
                 }
-                if (!user) {
-                    return callback(new data_service_1.DataService.DataSourceException("No user found"), null);
+                else {
+                    return callback(false);
                 }
-                user.Roles |= role;
-                return callback(null, true);
             });
         };
         /**
