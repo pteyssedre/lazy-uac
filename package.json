@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "typings": "dist/index",
   "scripts": {
+    "prepublish": "tsc",
     "test": "make test"
   },
   "keywords": [
