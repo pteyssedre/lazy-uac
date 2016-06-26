@@ -236,6 +236,7 @@ var DataService;
             var _this = this;
             this._getUserEntry(user, function (entry) {
                 if (entry) {
+                    entry.instance = user;
                     _this._updateUserEntry(entry, callback);
                 }
                 else {

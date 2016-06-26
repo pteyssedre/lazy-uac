@@ -44,14 +44,19 @@ var LazyUAC;
             this._dataSource.GetUserByUserName(username, function (user) {
                 if (user) {
                     user.ComparePassword(password, function (match) {
-                        callback(match);
+                        callback(match, user);
                     });
                 }
                 else {
-                    callback(false);
+                    callback(false, null);
                 }
             });
         };
+        /**
+         * To remove an user the {@link lazyboyjs.LazyInstance} will be flag to delete.
+         * @param userId {string} unique id of the instance to delete.
+         * @param callback {function(delete: boolean)}
+         */
         UserManager.prototype.DeleteUser = function (userId, callback) {
             this._ValidateDataSource();
             this._dataSource.DeleteUser(userId, callback);
@@ -75,16 +80,34 @@ var LazyUAC;
          * @param callback {function(error: Error, done: boolean)}
          */
         UserManager.prototype.AddRolesToUser = function (userId, role, callback) {
+            var _this = this;
             this._ValidateDataSource();
             this._dataSource.GetUserByUserId(userId, function (user) {
                 if (user) {
                     user.Roles |= role;
-                    return callback(true);
+                    _this.UpdateUser(user, callback);
                 }
                 else {
                     return callback(false);
                 }
             });
+        };
+        UserManager.prototype.RemoveRolesToUser = function (userId, role, callback) {
+            var _this = this;
+            this._ValidateDataSource();
+            this._dataSource.GetUserByUserId(userId, function (user) {
+                if (user) {
+                    if (user.Roles >= role) {
+                        user.Roles -= role;
+                        _this.UpdateUser(user, callback);
+                    }
+                }
+                return callback(false);
+            });
+        };
+        UserManager.prototype.UpdateUser = function (user, callback) {
+            this._ValidateDataSource();
+            this._dataSource.UpdateUser(user, callback);
         };
         /**
          * Helper to validate the state of the {@link _dataSource} property.

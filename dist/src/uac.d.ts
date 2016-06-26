@@ -22,7 +22,12 @@ export declare module LazyUAC {
          * @param password {string} password in clear to be compare with the one on the user instance
          * @param callback
          */
-        Authenticate(username: string, password: string, callback: (match: boolean) => void): void;
+        Authenticate(username: string, password: string, callback: (match: boolean, user: DataModel.User) => void): void;
+        /**
+         * To remove an user the {@link lazyboyjs.LazyInstance} will be flag to delete.
+         * @param userId {string} unique id of the instance to delete.
+         * @param callback {function(delete: boolean)}
+         */
         DeleteUser(userId: string, callback: (deleted: boolean) => void): void;
         /**
          * To retrieve user trough database and return the only one match value.
@@ -38,6 +43,8 @@ export declare module LazyUAC {
          * @param callback {function(error: Error, done: boolean)}
          */
         AddRolesToUser(userId: string, role: DataModel.Role, callback: (valid: boolean) => void): void;
+        RemoveRolesToUser(userId: string, role: DataModel.Role, callback: (done: boolean) => void): void;
+        UpdateUser(user: DataModel.User, callback: (done: boolean) => void): void;
         /**
          * Helper to validate the state of the {@link _dataSource} property.
          * @private

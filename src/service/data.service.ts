@@ -243,6 +243,7 @@ export module DataService {
         public UpdateUser(user: DataModel.User, callback: (success: boolean) => void): void {
             this._getUserEntry(user, (entry: lazyboyjs.LazyInstance): void => {
                 if (entry) {
+                    entry.instance = user;
                     this._updateUserEntry(entry, callback);
                 } else {
                     callback(false);

@@ -124,9 +124,11 @@ describe('Module', function () {
             });
             //noinspection JSUnresolvedFunction
             it('Should authenticated the user and return a object', function (done) {
-                uac.Authenticate(mockUser.Email, mockPassword, function (authenticated) {
+                uac.Authenticate(mockUser.Email, mockPassword, function (authenticated, user) {
                     //noinspection JSUnresolvedVariable
                     expect(authenticated).to.equal(true);
+                    expect(user).to.not.equal(null);
+                    expect(user.Id).to.equal(mockUser.Id);
                     done();
                 });
             });

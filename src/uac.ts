@@ -45,19 +45,24 @@ export module LazyUAC {
          * @param password {string} password in clear to be compare with the one on the user instance
          * @param callback
          */
-        public Authenticate(username: string, password: string, callback: (match: boolean) => void) {
+        public Authenticate(username: string, password: string, callback: (match: boolean, user: DataModel.User) => void) {
             this._ValidateDataSource();
             this._dataSource.GetUserByUserName(username, (user: DataModel.User): void => {
                 if (user) {
                     user.ComparePassword(password, (match: boolean): void => {
-                        callback(match);
+                        callback(match, user);
                     });
-                }else{
-                    callback(false);
+                } else {
+                    callback(false, null);
                 }
             });
         }
 
+        /**
+         * To remove an user the {@link lazyboyjs.LazyInstance} will be flag to delete.
+         * @param userId {string} unique id of the instance to delete.
+         * @param callback {function(delete: boolean)}
+         */
         public DeleteUser(userId: string, callback: (deleted: boolean) => void) {
             this._ValidateDataSource();
             this._dataSource.DeleteUser(userId, callback);
@@ -87,11 +92,29 @@ export module LazyUAC {
             this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void=> {
                 if (user) {
                     user.Roles |= role;
-                    return callback(true);
+                    this.UpdateUser(user, callback);
                 } else {
                     return callback(false);
                 }
             });
+        }
+
+        public RemoveRolesToUser(userId: string, role: DataModel.Role, callback: (done: boolean)=>void): void {
+            this._ValidateDataSource();
+            this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void => {
+                if (user) {
+                    if (user.Roles >= role) {
+                        user.Roles -= role;
+                        this.UpdateUser(user, callback);
+                    }
+                }
+                return callback(false);
+            });
+        }
+
+        public UpdateUser(user: DataModel.User, callback: (done: boolean) => void): void {
+            this._ValidateDataSource();
+            this._dataSource.UpdateUser(user, callback);
         }
 
         /**
