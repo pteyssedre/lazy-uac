@@ -21,6 +21,7 @@ var DataService;
         LazyDataServer.setLevel = function (level) {
             Log = new lazyFormatLogger.Logger(level);
             models_1.DataModel.Utils.setLevel(level);
+            lazyboyjs_1.lazyboyjs.LazyBoy.setLevel(level);
         };
         LazyDataServer.prototype.Connect = function (callback) {
             var _this = this;

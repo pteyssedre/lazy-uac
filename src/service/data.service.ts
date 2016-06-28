@@ -16,6 +16,7 @@ export module DataService {
         public static setLevel(level: lazyFormatLogger.LogLevel): void {
             Log = new lazyFormatLogger.Logger(level);
             DataModel.Utils.setLevel(level);
+            lazyboyjs.LazyBoy.setLevel(level);
         }
 
         private LazyBoy: lazyboyjs.LazyBoy;
