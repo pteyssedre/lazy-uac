@@ -1,7 +1,9 @@
 "use strict";
 var bcript = require("bcrypt-nodejs");
+var lazyFormatLogger = require("lazy-format-logger");
 var DataModel;
 (function (DataModel) {
+    var Log = new lazyFormatLogger.Logger();
     var Utils = (function () {
         function Utils() {
         }
@@ -11,8 +13,12 @@ var DataModel;
                 return v.toString(16);
             });
         };
+        Utils.setLevel = function (level) {
+            Log = new lazyFormatLogger.Logger(level);
+        };
         return Utils;
     }());
+    DataModel.Utils = Utils;
     (function (Role) {
         Role[Role["VIEWER"] = 1] = "VIEWER";
         Role[Role["USER"] = 2] = "USER";
@@ -32,19 +38,19 @@ var DataModel;
         User.prototype.AddPassword = function (password, callback) {
             var it = this;
             var round = (Math.floor(Math.random() * 10) + 1);
-            console.log("DEBUG", new Date(), "Generating Salt", round);
+            Log.d("User", "AddPassword", "Generating Salt", round);
             bcript.genSalt(round, function (error, salt) {
                 if (error) {
-                    console.error("ERROR", new Date(), error);
+                    Log.c("User", "AddPassword", "bcript.genSalt", error);
                     throw error;
                 }
-                console.log("DEBUG", new Date(), "Generating Hash", salt);
+                Log.d("User", "Generating Hash", salt);
                 bcript.hash(password, salt, it.cryptingProgress, function (error, hash) {
                     if (error) {
-                        console.error("ERROR", new Date(), error);
+                        Log.c("User", "AddPassword", "bcript.hash", error);
                         throw error;
                     }
-                    console.log("DEBUG", new Date(), "password encrypted", hash);
+                    Log.d("User", "AddPassword", "password encrypted", hash);
                     it.Password = hash;
                     callback();
                 });
@@ -53,28 +59,28 @@ var DataModel;
         User.prototype.AddPasswordSync = function (password) {
             var it = this;
             var round = (Math.floor(Math.random() * 10) + 1);
-            console.log("DEBUG", new Date(), "Generating Salt", round);
+            Log.d("User", "AddPasswordSync", "Generating Salt", round);
             var salt = bcript.genSaltSync(round);
-            console.log("DEBUG", new Date(), "Generating Hash", salt);
+            Log.d("User", "AddPasswordSync", "Generating Hash", salt);
             var hash = bcript.hashSync(password, salt);
-            console.log("DEBUG", new Date(), "password encrypted", hash);
+            Log.d("User", "AddPasswordSync", "password encrypted", hash);
             it.Password = hash;
         };
         User.prototype.ComparePassword = function (password, callback) {
             bcript.compare(password, this.Password, function (error, result) {
                 if (error) {
-                    console.error("ERROR", new Date(), error);
+                    Log.c("User", "ComparePassword", error);
                     throw error;
                 }
                 callback(result);
             });
         };
         User.prototype.ComparePasswordSync = function (password) {
-            console.log("DEBUG", new Date(), "comparing", password, this.Password);
+            Log.d("User", "ComparePasswordSync", "comparing", password, this.Password);
             return bcript.compareSync(password, this.Password);
         };
         User.prototype.cryptingProgress = function () {
-            //console.log("DEBUG", new Date(), "in progress");
+            //Log.d("", "in progress");
         };
         return User;
     }());

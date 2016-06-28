@@ -1,11 +1,20 @@
 /// <reference path="../typings/index.d.ts" />
 
-import {DataModel} from "./model/models";
-import {DataService} from "./service/data.service";
+import { DataModel } from "./model/models";
+import { DataService } from "./service/data.service";
+import lazyFormatLogger = require("lazy-format-logger");
 
 export module LazyUAC {
 
+    let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
+
     export class UserManager {
+
+        public static setLevel(level: lazyFormatLogger.LogLevel): void {
+            Log = new lazyFormatLogger.Logger(level);
+            DataService.LazyDataServer.setLevel(level);
+        }
+
         private _dataSource: DataService.UacDBA;
 
         constructor(dataSource?: DataService.UacDBA) {
@@ -123,7 +132,9 @@ export module LazyUAC {
          */
         private _ValidateDataSource(): void {
             if (!this._dataSource) {
-                throw new DataService.DataSourceException("data source can't be null");
+                let error = new DataService.DataSourceException("data source can't be null");
+                Log.c("UserManager", "ValidateDataSource", error);
+                throw error;
             }
         }
     }

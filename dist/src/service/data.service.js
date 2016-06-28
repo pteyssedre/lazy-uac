@@ -7,8 +7,10 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var lazyboyjs_1 = require("lazyboyjs");
 var models_1 = require("../model/models");
+var lazyFormatLogger = require("lazy-format-logger");
 var DataService;
 (function (DataService) {
+    var Log = new lazyFormatLogger.Logger();
     var LazyDataServer = (function () {
         function LazyDataServer(options) {
             this.isReady = false;
@@ -16,13 +18,17 @@ var DataService;
             this._validateOptions();
             this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
         }
+        LazyDataServer.setLevel = function (level) {
+            Log = new lazyFormatLogger.Logger(level);
+            models_1.DataModel.Utils.setLevel(level);
+        };
         LazyDataServer.prototype.Connect = function (callback) {
             var _this = this;
             var instance = this;
             this.LazyBoy.Databases(this.Options.credential_db, this.Options.profile_db);
             this.LazyBoy.InitializeAllDatabases(function (error, report) {
                 if (error) {
-                    console.error("ERROR", "_validateOptions", new Date(), JSON.stringify(error), error);
+                    Log.c("LazyDataServer", "Connect", "InitializeAllDatabases", error);
                     throw error;
                 }
                 else {
@@ -33,11 +39,11 @@ var DataService;
                     return !!(l.status & valid);
                 })) {
                     _this.LazyBoy.Connect();
-                    console.log("INFO", new Date(), "LazyBoyConnect called");
+                    Log.i("LazyDataServer", "Connect", "LazyBoyConnect called");
                     callback(null, report);
                 }
                 else {
-                    callback(new DataSourceException("Databases were not generated properly", UserCodeException.NOT_FOUND), report);
+                    callback(new DataSourceException("Databases were not generated properly"), report);
                 }
             });
         };
@@ -88,11 +94,15 @@ var DataService;
                     });
                 }
                 else {
-                    throw new DataSourceException("invalid data");
+                    var error = new DataSourceException("invalid data");
+                    Log.c("LazyDataServer", "userExist", error);
+                    throw error;
                 }
             }
             else {
-                throw new DataSourceException("invalid data");
+                var error = new DataSourceException("invalid data");
+                Log.c("LazyDataServer", "userExist", error);
+                throw error;
             }
         };
         /**
@@ -115,32 +125,36 @@ var DataService;
                     });
                 }
                 else {
-                    throw new DataSourceException("invalid data");
+                    var error = new DataSourceException("invalid data");
+                    Log.c("LazyDataServer", "userExist", error);
+                    throw error;
                 }
             }
             else {
-                throw new DataSourceException("invalid data");
+                var error = new DataSourceException("invalid data");
+                Log.c("LazyDataServer", "userExist", error);
+                throw error;
             }
         };
         LazyDataServer.prototype._addUserEntry = function (data, type, callback) {
             var entry = lazyboyjs_1.lazyboyjs.LazyBoy.NewEntry(data, type);
             this.LazyBoy.AddEntry(this.Options.credential_db, entry, function (error, code, entry) {
                 if (error) {
-                    console.error("ERROR", "InsertUserAsync", new Date(), error, code);
+                    Log.c("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", error, code);
                     throw error;
                 }
-                console.log("DEBUG", new Date(), JSON.stringify(entry));
+                Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", entry);
                 switch (code) {
                     case lazyboyjs_1.lazyboyjs.InstanceCreateStatus.Created:
-                        console.log("INFO", new Date(), "Instance Created");
+                        Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "Instance Created");
                         callback(true);
                         break;
                     case lazyboyjs_1.lazyboyjs.InstanceCreateStatus.Conflict:
-                        console.log("INFO", new Date(), "Instance Conflict");
+                        Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "Instance Conflict");
                         callback(false);
                         break;
                     default:
-                        console.error("ERROR", new Date(), "UNMANAGED code", code);
+                        Log.c("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "unmanaged code : " + code);
                         callback(false);
                         break;
                 }
@@ -149,43 +163,50 @@ var DataService;
         LazyDataServer.prototype._getEntryByUserId = function (userId, callback) {
             this.LazyBoy.GetViewResult(this.Options.credential_db, "entryByUserId", { key: userId, reduce: false }, function (error, result) {
                 if (error) {
-                    console.error("ERROR", "_getEntryByUserId", new Date(), error);
+                    Log.c("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", error);
                     throw error;
                 }
                 if (result.length == 0) {
                     // throw new DataSourceException("no user found", UserCodeException.NOT_FOUND);
+                    Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "no entry found");
                     return callback(null);
                 }
                 else if (result.length > 1) {
                     //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
+                    Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "more than one entry was found");
                     return callback(null);
                 }
+                Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "one entry was found");
                 callback(result[0].value);
             });
         };
         LazyDataServer.prototype._getEntryByUserName = function (username, callback) {
             this.LazyBoy.GetViewResult(this.Options.credential_db, "entryByEmail", { key: username, reduce: false }, function (error, result) {
                 if (error) {
-                    console.error("ERROR", "_getEntryByUserName", new Date(), error);
+                    Log.c("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", error);
                     throw error;
                 }
                 if (result.length == 0) {
                     // throw new DataSourceException("no user found", UserCodeException.NOT_FOUND);
+                    Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "no user found");
                     return callback(null);
                 }
                 else if (result.length > 1) {
                     //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
+                    Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "more than one user was found");
                     return callback(null);
                 }
+                Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "one user was found");
                 callback(result[0].value);
             });
         };
         LazyDataServer.prototype._updateUserEntry = function (entry, callback) {
             this.LazyBoy.UpdateEntry(this.Options.credential_db, entry, function (error, updated, updatedEntry) {
                 if (error) {
-                    console.error("ERROR", new Date(), JSON.stringify(error));
+                    Log.c("LazyDataServer", "updateUserEntry", "LazyBoy.UpdateEntry", error);
                     throw error;
                 }
+                Log.d("LazyDataServer", "updateUserEntry", "LazyBoy.UpdateEntry", updated, updatedEntry);
                 callback(updated);
             });
         };
@@ -250,9 +271,10 @@ var DataService;
                 if (entry) {
                     _this.LazyBoy.DeleteEntry(_this.Options.credential_db, entry, function (error, deleted) {
                         if (error) {
-                            console.error("ERROR", new Date(), JSON.stringify(error));
+                            Log.c("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", error);
                             throw error;
                         }
+                        Log.d("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", deleted);
                         callback(deleted);
                     }, false);
                 }

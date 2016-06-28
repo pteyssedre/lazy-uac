@@ -1,8 +1,10 @@
 /// <reference path="../../../typings/index.d.ts" />
 import { lazyboyjs } from "lazyboyjs";
 import { DataModel } from "../model/models";
+import lazyFormatLogger = require("lazy-format-logger");
 export declare module DataService {
     class LazyDataServer implements UacDBA {
+        static setLevel(level: lazyFormatLogger.LogLevel): void;
         private LazyBoy;
         private Options;
         isReady: boolean;
@@ -42,7 +44,7 @@ export declare module DataService {
     }
     class DataSourceException extends Error {
         message: string;
-        code: UserCodeException;
+        private code;
         constructor(message: string, code?: UserCodeException);
     }
     interface Callback {

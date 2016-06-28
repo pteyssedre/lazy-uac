@@ -1,12 +1,22 @@
 /// <reference path="../../typings/index.d.ts"/>
 
-import {lazyboyjs} from  "lazyboyjs";
+import { lazyboyjs } from  "lazyboyjs";
 
-import {DataModel} from "../model/models";
+import { DataModel } from "../model/models";
+
+import lazyFormatLogger = require("lazy-format-logger");
 
 export module DataService {
 
+    let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
+
+
     export class LazyDataServer implements UacDBA {
+
+        public static setLevel(level: lazyFormatLogger.LogLevel): void {
+            Log = new lazyFormatLogger.Logger(level);
+            DataModel.Utils.setLevel(level);
+        }
 
         private LazyBoy: lazyboyjs.LazyBoy;
         private Options: LazyDataSourceConfig;
@@ -24,7 +34,7 @@ export module DataService {
             this.LazyBoy.Databases(this.Options.credential_db, this.Options.profile_db);
             this.LazyBoy.InitializeAllDatabases((error: Error, report: lazyboyjs.ReportInitialization): void => {
                 if (error) {
-                    console.error("ERROR", "_validateOptions", new Date(), JSON.stringify(error), error);
+                    Log.c("LazyDataServer", "Connect", "InitializeAllDatabases", error);
                     throw error;
                 } else {
                     instance.isReady = true;
@@ -34,10 +44,10 @@ export module DataService {
                         return !!(l.status & valid);
                     })) {
                     this.LazyBoy.Connect();
-                    console.log("INFO", new Date(), "LazyBoyConnect called");
+                    Log.i("LazyDataServer", "Connect", "LazyBoyConnect called");
                     callback(null, report);
                 } else {
-                    callback(new DataSourceException("Databases were not generated properly", UserCodeException.NOT_FOUND), report);
+                    callback(new DataSourceException("Databases were not generated properly"), report);
                 }
             });
         }
@@ -86,10 +96,14 @@ export module DataService {
                         callback(entry != null && !entry.isDeleted);
                     });
                 } else {
-                    throw new DataSourceException("invalid data");
+                    let error = new DataSourceException("invalid data");
+                    Log.c("LazyDataServer", "userExist", error);
+                    throw error;
                 }
             } else {
-                throw new DataSourceException("invalid data");
+                let error = new DataSourceException("invalid data");
+                Log.c("LazyDataServer", "userExist", error);
+                throw error;
             }
         }
 
@@ -111,10 +125,14 @@ export module DataService {
                         callback(entry.isDeleted ? null : entry);
                     });
                 } else {
-                    throw new DataSourceException("invalid data");
+                    let error = new DataSourceException("invalid data");
+                    Log.c("LazyDataServer", "userExist", error);
+                    throw error;
                 }
             } else {
-                throw new DataSourceException("invalid data");
+                let error = new DataSourceException("invalid data");
+                Log.c("LazyDataServer", "userExist", error);
+                throw error;
             }
         }
 
@@ -122,21 +140,21 @@ export module DataService {
             let entry = lazyboyjs.LazyBoy.NewEntry(data, type);
             this.LazyBoy.AddEntry(this.Options.credential_db, entry, (error: Error, code: lazyboyjs.InstanceCreateStatus, entry: lazyboyjs.LazyInstance): void => {
                 if (error) {
-                    console.error("ERROR", "InsertUserAsync", new Date(), error, code);
+                    Log.c("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", error, code);
                     throw error;
                 }
-                console.log("DEBUG", new Date(), JSON.stringify(entry));
+                Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", entry);
                 switch (code) {
                     case lazyboyjs.InstanceCreateStatus.Created:
-                        console.log("INFO", new Date(), "Instance Created");
+                        Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "Instance Created");
                         callback(true);
                         break;
                     case lazyboyjs.InstanceCreateStatus.Conflict:
-                        console.log("INFO", new Date(), "Instance Conflict");
+                        Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "Instance Conflict");
                         callback(false);
                         break;
                     default:
-                        console.error("ERROR", new Date(), "UNMANAGED code", code);
+                        Log.c("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "unmanaged code : " + code);
                         callback(false);
                         break;
                 }
@@ -150,16 +168,19 @@ export module DataService {
                 {key: userId, reduce: false},
                 (error: Error, result: any): void => {
                     if (error) {
-                        console.error("ERROR", "_getEntryByUserId", new Date(), error);
+                        Log.c("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", error);
                         throw error;
                     }
                     if (result.length == 0) {
                         // throw new DataSourceException("no user found", UserCodeException.NOT_FOUND);
+                        Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "no entry found");
                         return callback(null);
                     } else if (result.length > 1) {
                         //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
+                        Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "more than one entry was found");
                         return callback(null);
                     }
+                    Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "one entry was found");
                     callback(result[0].value);
                 });
         }
@@ -171,16 +192,19 @@ export module DataService {
                 {key: username, reduce: false},
                 (error: Error, result: any): void => {
                     if (error) {
-                        console.error("ERROR", "_getEntryByUserName", new Date(), error);
+                        Log.c("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", error);
                         throw error;
                     }
                     if (result.length == 0) {
                         // throw new DataSourceException("no user found", UserCodeException.NOT_FOUND);
+                        Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "no user found");
                         return callback(null);
                     } else if (result.length > 1) {
                         //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
+                        Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "more than one user was found");
                         return callback(null);
                     }
+                    Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "one user was found");
                     callback(result[0].value);
                 });
         }
@@ -191,9 +215,10 @@ export module DataService {
                 entry,
                 (error: any, updated: boolean, updatedEntry: lazyboyjs.LazyInstance): void => {
                     if (error) {
-                        console.error("ERROR", new Date(), JSON.stringify(error));
+                        Log.c("LazyDataServer", "updateUserEntry", "LazyBoy.UpdateEntry", error);
                         throw error;
                     }
+                    Log.d("LazyDataServer", "updateUserEntry", "LazyBoy.UpdateEntry", updated, updatedEntry);
                     callback(updated);
                 });
         }
@@ -257,9 +282,10 @@ export module DataService {
                     this.LazyBoy.DeleteEntry(this.Options.credential_db, entry,
                         (error: Error, deleted: boolean): void => {
                             if (error) {
-                                console.error("ERROR", new Date(), JSON.stringify(error));
+                                Log.c("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", error);
                                 throw error;
                             }
+                            Log.d("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", deleted);
                             callback(deleted);
                         }, false);
                 } else {
@@ -320,8 +346,10 @@ export module DataService {
     }
 
     export class DataSourceException extends Error {
-        constructor(public message: string, public code?: UserCodeException) {
+        private code: UserCodeException;
+        constructor(public message: string, code?: UserCodeException) {
             super(message);
+            this.code = code;
         }
     }
 

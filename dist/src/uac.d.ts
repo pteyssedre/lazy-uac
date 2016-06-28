@@ -1,8 +1,10 @@
 /// <reference path="../../typings/index.d.ts" />
 import { DataModel } from "./model/models";
 import { DataService } from "./service/data.service";
+import lazyFormatLogger = require("lazy-format-logger");
 export declare module LazyUAC {
     class UserManager {
+        static setLevel(level: lazyFormatLogger.LogLevel): void;
         private _dataSource;
         constructor(dataSource?: DataService.UacDBA);
         /**

@@ -2,8 +2,10 @@
 "use strict";
 var models_1 = require("./model/models");
 var data_service_1 = require("./service/data.service");
+var lazyFormatLogger = require("lazy-format-logger");
 var LazyUAC;
 (function (LazyUAC) {
+    var Log = new lazyFormatLogger.Logger();
     var UserManager = (function () {
         function UserManager(dataSource) {
             this._dataSource = dataSource;
@@ -12,6 +14,10 @@ var LazyUAC;
             }
             this._ValidateDataSource();
         }
+        UserManager.setLevel = function (level) {
+            Log = new lazyFormatLogger.Logger(level);
+            data_service_1.DataService.LazyDataServer.setLevel(level);
+        };
         /**
          * Starting the Manager to connect and initialized the databases, if needed.
          * @param callback {function(error: Error, result: Object)}
@@ -115,7 +121,9 @@ var LazyUAC;
          */
         UserManager.prototype._ValidateDataSource = function () {
             if (!this._dataSource) {
-                throw new data_service_1.DataService.DataSourceException("data source can't be null");
+                var error = new data_service_1.DataService.DataSourceException("data source can't be null");
+                Log.c("UserManager", "ValidateDataSource", error);
+                throw error;
             }
         };
         return UserManager;

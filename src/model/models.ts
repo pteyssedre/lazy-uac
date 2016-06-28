@@ -1,13 +1,21 @@
 import * as bcript from "bcrypt-nodejs";
 
+import lazyFormatLogger = require("lazy-format-logger");
+
 export module DataModel {
 
-    class Utils {
+    let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
+
+    export class Utils {
         public static newGuid(): string {
             return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
                 let r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
+        }
+
+        public static setLevel(level: lazyFormatLogger.LogLevel): void {
+            Log = new lazyFormatLogger.Logger(level);
         }
     }
 
@@ -39,19 +47,19 @@ export module DataModel {
         public AddPassword(password: string, callback: ()=>void): void {
             let it = this;
             let round = (Math.floor(Math.random() * 10) + 1);
-            console.log("DEBUG", new Date(), "Generating Salt", round);
+            Log.d("User", "AddPassword", "Generating Salt", round);
             bcript.genSalt(round, (error: Error, salt: string): void => {
                 if (error) {
-                    console.error("ERROR", new Date(), error);
+                    Log.c("User", "AddPassword", "bcript.genSalt", error);
                     throw error;
                 }
-                console.log("DEBUG", new Date(), "Generating Hash", salt);
+                Log.d("User", "Generating Hash", salt);
                 bcript.hash(password, salt, it.cryptingProgress, (error: Error, hash: string): void => {
                     if (error) {
-                        console.error("ERROR", new Date(), error);
+                        Log.c("User", "AddPassword", "bcript.hash", error);
                         throw error;
                     }
-                    console.log("DEBUG", new Date(), "password encrypted", hash);
+                    Log.d("User", "AddPassword", "password encrypted", hash);
                     it.Password = hash;
                     callback();
                 });
@@ -61,18 +69,18 @@ export module DataModel {
         public AddPasswordSync(password: string): void {
             let it = this;
             let round = (Math.floor(Math.random() * 10) + 1);
-            console.log("DEBUG", new Date(), "Generating Salt", round);
+            Log.d("User", "AddPasswordSync", "Generating Salt", round);
             let salt = bcript.genSaltSync(round);
-            console.log("DEBUG", new Date(), "Generating Hash", salt);
+            Log.d("User", "AddPasswordSync", "Generating Hash", salt);
             let hash = bcript.hashSync(password, salt);
-            console.log("DEBUG", new Date(), "password encrypted", hash);
+            Log.d("User", "AddPasswordSync", "password encrypted", hash);
             it.Password = hash;
         }
 
         public ComparePassword(password: string, callback: (match: boolean)=>void): void {
             bcript.compare(password, this.Password, (error: Error, result: boolean): void => {
                 if (error) {
-                    console.error("ERROR", new Date(), error);
+                    Log.c("User", "ComparePassword", error);
                     throw error;
                 }
                 callback(result);
@@ -80,13 +88,13 @@ export module DataModel {
         }
 
         public ComparePasswordSync(password: string): boolean {
-            console.log("DEBUG", new Date(), "comparing", password, this.Password);
+            Log.d("User", "ComparePasswordSync", "comparing", password, this.Password);
             return bcript.compareSync(password, this.Password);
         }
 
 
         private cryptingProgress(): void {
-            //console.log("DEBUG", new Date(), "in progress");
+            //Log.d("", "in progress");
         }
     }
 

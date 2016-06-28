@@ -1,4 +1,9 @@
+import lazyFormatLogger = require("lazy-format-logger");
 export declare module DataModel {
+    class Utils {
+        static newGuid(): string;
+        static setLevel(level: lazyFormatLogger.LogLevel): void;
+    }
     enum Role {
         VIEWER = 1,
         USER = 2,
