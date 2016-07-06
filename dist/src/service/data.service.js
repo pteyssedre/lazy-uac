@@ -1,4 +1,3 @@
-/// <reference path="../../typings/index.d.ts"/>
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -55,18 +54,26 @@ var DataService;
                     profile_db: "profile"
                 };
             }
-            if (this.Options.LazyBoyOptions) {
-                this.Options.LazyBoyOptions.prefix = "uac";
-                this.Options.LazyBoyOptions.autoConnect = true;
+            if (!this.Options.LazyBoyOptions) {
+                this.Options.LazyBoyOptions = {
+                    prefix: "uac",
+                    autoConnect: true,
+                    views: {}
+                };
             }
             else {
-                this.Options.LazyBoyOptions = { prefix: "uac", autoConnect: true, views: {} };
+                if (!this.Options.LazyBoyOptions.prefix) {
+                    this.Options.LazyBoyOptions.prefix = "uac";
+                }
+                if (!this.Options.LazyBoyOptions.autoConnect) {
+                    this.Options.LazyBoyOptions.autoConnect = true;
+                }
             }
             this._injectLazyUacViews();
         };
         LazyDataServer.prototype._injectLazyUacViews = function () {
-            this.Options.LazyBoyOptions.views["uac_" + this.Options.credential_db] = userViews;
-            this.Options.LazyBoyOptions.views["uac_" + this.Options.profile_db] = profileViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.credential_db] = userViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.profile_db] = profileViews;
         };
         /**
          * Shorter to search entry by UserId or UserName if one of those properties exist in the {@code user}

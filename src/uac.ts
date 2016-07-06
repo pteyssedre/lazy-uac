@@ -1,4 +1,3 @@
-/// <reference path="../typings/index.d.ts" />
 
 import { DataModel } from "./model/models";
 import { DataService } from "./service/data.service";
@@ -7,6 +6,12 @@ import lazyFormatLogger = require("lazy-format-logger");
 export module LazyUAC {
 
     let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
+
+    export interface UacOptions{
+        logLevel?: lazyFormatLogger.LogLevel,
+        dataSource?: DataService.UacDBA,
+        dataSourceOptions?: DataService.LazyDataSourceConfig
+    }
 
     export class UserManager {
 
@@ -17,10 +22,13 @@ export module LazyUAC {
 
         private _dataSource: DataService.UacDBA;
 
-        constructor(dataSource?: DataService.UacDBA) {
-            this._dataSource = dataSource;
+        constructor(public options?: UacOptions) {
+            if(!this.options){
+                this.options = {};
+            }
+            this._dataSource = this.options.dataSource;
             if (!this._dataSource) {
-                this._dataSource = new DataService.LazyDataServer();
+                this._dataSource = new DataService.LazyDataServer(this.options.dataSourceOptions);
             }
             this._ValidateDataSource();
         }

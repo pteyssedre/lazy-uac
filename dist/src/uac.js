@@ -1,4 +1,3 @@
-/// <reference path="../typings/index.d.ts" />
 "use strict";
 var models_1 = require("./model/models");
 var data_service_1 = require("./service/data.service");
@@ -7,10 +6,14 @@ var LazyUAC;
 (function (LazyUAC) {
     var Log = new lazyFormatLogger.Logger();
     var UserManager = (function () {
-        function UserManager(dataSource) {
-            this._dataSource = dataSource;
+        function UserManager(options) {
+            this.options = options;
+            if (!this.options) {
+                this.options = {};
+            }
+            this._dataSource = this.options.dataSource;
             if (!this._dataSource) {
-                this._dataSource = new data_service_1.DataService.LazyDataServer();
+                this._dataSource = new data_service_1.DataService.LazyDataServer(this.options.dataSourceOptions);
             }
             this._ValidateDataSource();
         }

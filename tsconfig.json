@@ -16,6 +16,7 @@
     "index.ts",
     "src/uac.ts",
     "src/model/models.ts",
-    "src/service/data.service.ts"
+    "src/service/data.service.ts",
+    "typings/index.d.ts"
   ]
 }

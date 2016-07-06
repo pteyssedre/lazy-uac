@@ -1,4 +1,3 @@
-/// <reference path="../../../typings/index.d.ts" />
 import { lazyboyjs } from "lazyboyjs";
 import { DataModel } from "../model/models";
 import lazyFormatLogger = require("lazy-format-logger");
