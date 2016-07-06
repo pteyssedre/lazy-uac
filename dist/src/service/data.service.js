@@ -205,8 +205,8 @@ var DataService;
             if (!this.Options.LazyBoyOptions.views) {
                 this.Options.LazyBoyOptions.views = {};
             }
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.credential_db] = userViews;
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.profile_db] = profileViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.credential_db] = userViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.profile_db] = profileViews;
         };
         /**
          * Shorter to search entry by UserId or UserName if one of those properties exist in the {@code user}
