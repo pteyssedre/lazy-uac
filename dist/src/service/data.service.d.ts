@@ -135,8 +135,8 @@ export declare module DataService {
         (error: DataSourceException, result: any | {}): void;
     }
     interface LazyDataSourceConfig {
-        credential_db: string;
-        profile_db: string;
+        credential_db?: string;
+        profile_db?: string;
         LazyBoy?: lazyboyjs.LazyBoy;
         LazyBoyOptions?: lazyboyjs.LazyOptions;
     }

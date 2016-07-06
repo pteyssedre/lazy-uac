@@ -174,10 +174,13 @@ export module DataService {
          */
         private _validateOptions(): void {
             if (!this.Options) {
-                this.Options = {
-                    credential_db: "auth",
-                    profile_db: "profile"
-                };
+                this.Options = { };
+            }
+            if(!this.Options.credential_db){
+                this.Options.credential_db = "auth";
+            }
+            if(!this.Options.profile_db){
+                this.Options.profile_db = "profile";
             }
             if (!this.Options.LazyBoyOptions) {
                 this.Options.LazyBoyOptions = {
@@ -457,8 +460,8 @@ export module DataService {
     }
 
     export interface LazyDataSourceConfig {
-        credential_db: string,
-        profile_db: string,
+        credential_db?: string,
+        profile_db?: string,
         LazyBoy?: lazyboyjs.LazyBoy,
         LazyBoyOptions?: lazyboyjs.LazyOptions
     }

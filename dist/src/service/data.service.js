@@ -172,10 +172,13 @@ var DataService;
          */
         LazyDataServer.prototype._validateOptions = function () {
             if (!this.Options) {
-                this.Options = {
-                    credential_db: "auth",
-                    profile_db: "profile"
-                };
+                this.Options = {};
+            }
+            if (!this.Options.credential_db) {
+                this.Options.credential_db = "auth";
+            }
+            if (!this.Options.profile_db) {
+                this.Options.profile_db = "profile";
             }
             if (!this.Options.LazyBoyOptions) {
                 this.Options.LazyBoyOptions = {
