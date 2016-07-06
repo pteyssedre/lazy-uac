@@ -1,6 +1,6 @@
-import { lazyboyjs } from  "lazyboyjs";
+import {lazyboyjs} from  "lazyboyjs";
 
-import { DataModel } from "../model/models";
+import {DataModel} from "../model/models";
 
 import lazyFormatLogger = require("lazy-format-logger");
 
@@ -76,6 +76,9 @@ export module DataService {
         }
 
         private _injectLazyUacViews(): void {
+            if (!this.Options.LazyBoyOptions.views) {
+                this.Options.LazyBoyOptions.views = {};
+            }
             this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.credential_db] = userViews;
             this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.profile_db] = profileViews;
         }

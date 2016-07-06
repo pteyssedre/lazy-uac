@@ -72,6 +72,9 @@ var DataService;
             this._injectLazyUacViews();
         };
         LazyDataServer.prototype._injectLazyUacViews = function () {
+            if (!this.Options.LazyBoyOptions.views) {
+                this.Options.LazyBoyOptions.views = {};
+            }
             this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.credential_db] = userViews;
             this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.profile_db] = profileViews;
         };
