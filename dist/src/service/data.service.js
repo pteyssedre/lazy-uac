@@ -10,18 +10,38 @@ var lazyFormatLogger = require("lazy-format-logger");
 var DataService;
 (function (DataService) {
     var Log = new lazyFormatLogger.Logger();
+    /**
+     * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
+     */
     var LazyDataServer = (function () {
+        /**
+         * @param options {@link LazyDataSourceConfig}
+         */
         function LazyDataServer(options) {
             this.isReady = false;
             this.Options = options;
             this._validateOptions();
-            this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
+            this.LazyBoy = this.Options.LazyBoy;
+            if (!this.LazyBoy) {
+                this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
+            }
         }
+        /**
+         * In order to restrict log to a specific level the variable {@link Log}
+         * is reset and the level is propagated to {@link DataModel} and {@link LazyBoy} classes.
+         * @param level {@link LogLevel}
+         */
         LazyDataServer.setLevel = function (level) {
             Log = new lazyFormatLogger.Logger(level);
             models_1.DataModel.Utils.setLevel(level);
             lazyboyjs_1.lazyboyjs.LazyBoy.setLevel(level);
         };
+        /**
+         * By calling the Connect function, two databases will be added to the {@link LazyBoy} instance and initialized.
+         * Since the LazyBoy instance can be external we may have more than 2 database.
+         * So using array filtering we select the databases than contains the name of "credential_db"  and "profile_db"
+         * @param callback {function(error: DataSourceException, result: lazyboyjs.ReportInitialization): void}
+         */
         LazyDataServer.prototype.Connect = function (callback) {
             var _this = this;
             var instance = this;
@@ -36,7 +56,7 @@ var DataService;
                 }
                 if (report.success.length == 2 && report.success.filter(function (l) {
                     var valid = lazyboyjs_1.lazyboyjs.DbCreateStatus.UpToDate | lazyboyjs_1.lazyboyjs.DbCreateStatus.Created;
-                    return !!(l.status & valid);
+                    return (l.name.indexOf(_this.Options.credential_db) > 0 || l.name.indexOf(_this.Options.profile_db) > 0) && !!(l.status & valid);
                 })) {
                     _this.LazyBoy.Connect();
                     Log.i("LazyDataServer", "Connect", "LazyBoyConnect called");
@@ -47,6 +67,109 @@ var DataService;
                 }
             });
         };
+        /**
+         * Given an userId, if a match is found a {@link DataModel.User} instance will be return.
+         * @param userId {string}
+         * @param callback {function(user: DataModel.User): void}
+         */
+        LazyDataServer.prototype.GetUserByUserId = function (userId, callback) {
+            this._getEntryByUserId(userId, function (entry) {
+                if (entry) {
+                    var u = new models_1.DataModel.User();
+                    var keys = Object.keys(entry);
+                    for (var i = 0; i < keys.length; i++) {
+                        var p = keys[i];
+                        u[p] = entry[p];
+                    }
+                    callback(u);
+                }
+                else {
+                    callback(null);
+                }
+            });
+        };
+        /**
+         *
+         * @param username
+         * @param callback {function(user: DataModel.User): void}
+         */
+        LazyDataServer.prototype.GetUserByUserName = function (username, callback) {
+            this._getEntryByUserName(username, function (entry) {
+                if (entry) {
+                    var u = new models_1.DataModel.User();
+                    var keys = Object.keys(entry.instance);
+                    for (var i = 0; i < keys.length; i++) {
+                        var p = keys[i];
+                        u[p] = entry.instance[p];
+                    }
+                    callback(u);
+                }
+                else {
+                    callback(null);
+                }
+            });
+        };
+        /**
+         *
+         * @param user {DataModel.User}
+         * @param callback {function(success: boolean): void}
+         */
+        LazyDataServer.prototype.InsertUser = function (user, callback) {
+            var _this = this;
+            this._userExist(user, function (exist) {
+                if (!exist) {
+                    _this._addUserEntry(user, "user", callback);
+                }
+                else {
+                    callback(false);
+                }
+            });
+        };
+        /**
+         *
+         * @param user {DataModel.User}
+         * @param callback {function(success: boolean): void}
+         */
+        LazyDataServer.prototype.UpdateUser = function (user, callback) {
+            var _this = this;
+            this._getUserEntry(user, function (entry) {
+                if (entry) {
+                    entry.instance = user;
+                    _this._updateUserEntry(entry, callback);
+                }
+                else {
+                    callback(false);
+                }
+            });
+        };
+        /**
+         * Given the userId the {@link lazyboyjs.LazyInstance} will be flag as deleted.
+         * @param userId {string}
+         * @param callback {function(success: boolean): void}
+         */
+        LazyDataServer.prototype.DeleteUser = function (userId, callback) {
+            var _this = this;
+            this._getEntryByUserId(userId, function (entry) {
+                if (entry) {
+                    _this.LazyBoy.DeleteEntry(_this.Options.credential_db, entry, function (error, deleted) {
+                        if (error) {
+                            Log.c("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", error);
+                            throw error;
+                        }
+                        Log.d("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", deleted);
+                        callback(deleted);
+                    }, false);
+                }
+                else {
+                    callback(false);
+                }
+            });
+        };
+        /**
+         * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
+         * inside the object.
+         * @private
+         */
         LazyDataServer.prototype._validateOptions = function () {
             if (!this.Options) {
                 this.Options = {
@@ -71,6 +194,10 @@ var DataService;
             }
             this._injectLazyUacViews();
         };
+        /**
+         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
+         * @private
+         */
         LazyDataServer.prototype._injectLazyUacViews = function () {
             if (!this.Options.LazyBoyOptions.views) {
                 this.Options.LazyBoyOptions.views = {};
@@ -147,6 +274,14 @@ var DataService;
                 throw error;
             }
         };
+        /**
+         * Shorter to execute {@link AddEntry} on "credential_db". All conflict, update or delete
+         * should be managed here.
+         * @param data {object}
+         * @param type {string}
+         * @param callback {function(success: boolean):void}
+         * @private
+         */
         LazyDataServer.prototype._addUserEntry = function (data, type, callback) {
             var entry = lazyboyjs_1.lazyboyjs.LazyBoy.NewEntry(data, type);
             this.LazyBoy.AddEntry(this.Options.credential_db, entry, function (error, code, entry) {
@@ -171,6 +306,16 @@ var DataService;
                 }
             });
         };
+        /**
+         * Shorter to select an {@link DataModel.User} instance given an userId.
+         * This function execute {@link GetViewResult} using the following parameters :
+         * <pre>
+         *      Options.credential_db, "entryByUserId", {key: userId, reduce: false},
+         * </pre>
+         * @param userId {string}
+         * @param callback {function(entry: lazyboyjs.LazyInstance):void}
+         * @private
+         */
         LazyDataServer.prototype._getEntryByUserId = function (userId, callback) {
             this.LazyBoy.GetViewResult(this.Options.credential_db, "entryByUserId", { key: userId, reduce: false }, function (error, result) {
                 if (error) {
@@ -191,6 +336,16 @@ var DataService;
                 callback(result[0].value);
             });
         };
+        /**
+         * Shorter to select an {@link DataModel.User} instance given an username.
+         * This function execute {@link GetViewResult} using the following parameters :
+         * <pre>
+         *      Options.credential_db, "entryByEmail", {key: username, reduce: false},
+         * </pre>
+         * @param username {string}
+         * @param callback {function(entry: lazyboyjs.LazyInstance):void}
+         * @private
+         */
         LazyDataServer.prototype._getEntryByUserName = function (username, callback) {
             this.LazyBoy.GetViewResult(this.Options.credential_db, "entryByEmail", { key: username, reduce: false }, function (error, result) {
                 if (error) {
@@ -211,6 +366,12 @@ var DataService;
                 callback(result[0].value);
             });
         };
+        /**
+         * Shorter to execute {@link LazyDataServer.UpdateEntry} on the "credential_db".
+         * @param entry {lazyboyjs.LazyInstance}
+         * @param callback {function(updated: boolean):void}
+         * @private
+         */
         LazyDataServer.prototype._updateUserEntry = function (entry, callback) {
             this.LazyBoy.UpdateEntry(this.Options.credential_db, entry, function (error, updated, updatedEntry) {
                 if (error) {
@@ -219,79 +380,6 @@ var DataService;
                 }
                 Log.d("LazyDataServer", "updateUserEntry", "LazyBoy.UpdateEntry", updated, updatedEntry);
                 callback(updated);
-            });
-        };
-        LazyDataServer.prototype.GetUserByUserId = function (userId, callback) {
-            this._getEntryByUserId(userId, function (entry) {
-                if (entry) {
-                    var u = new models_1.DataModel.User();
-                    var keys = Object.keys(entry);
-                    for (var i = 0; i < keys.length; i++) {
-                        var p = keys[i];
-                        u[p] = entry[p];
-                    }
-                    callback(u);
-                }
-                else {
-                    callback(null);
-                }
-            });
-        };
-        LazyDataServer.prototype.GetUserByUserName = function (username, callback) {
-            this._getEntryByUserName(username, function (entry) {
-                if (entry) {
-                    var u = new models_1.DataModel.User();
-                    var keys = Object.keys(entry.instance);
-                    for (var i = 0; i < keys.length; i++) {
-                        var p = keys[i];
-                        u[p] = entry.instance[p];
-                    }
-                    callback(u);
-                }
-                else {
-                    callback(null);
-                }
-            });
-        };
-        LazyDataServer.prototype.InsertUser = function (user, callback) {
-            var _this = this;
-            this._userExist(user, function (exist) {
-                if (!exist) {
-                    _this._addUserEntry(user, "user", callback);
-                }
-                else {
-                    callback(false);
-                }
-            });
-        };
-        LazyDataServer.prototype.UpdateUser = function (user, callback) {
-            var _this = this;
-            this._getUserEntry(user, function (entry) {
-                if (entry) {
-                    entry.instance = user;
-                    _this._updateUserEntry(entry, callback);
-                }
-                else {
-                    callback(false);
-                }
-            });
-        };
-        LazyDataServer.prototype.DeleteUser = function (userId, callback) {
-            var _this = this;
-            this._getEntryByUserId(userId, function (entry) {
-                if (entry) {
-                    _this.LazyBoy.DeleteEntry(_this.Options.credential_db, entry, function (error, deleted) {
-                        if (error) {
-                            Log.c("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", error);
-                            throw error;
-                        }
-                        Log.d("LazyDataServer", "DeleteUser", "LazyBoy.DeleteEntry", deleted);
-                        callback(deleted);
-                    }, false);
-                }
-                else {
-                    callback(false);
-                }
             });
         };
         return LazyDataServer;
