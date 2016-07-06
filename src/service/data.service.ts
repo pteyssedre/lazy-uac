@@ -79,8 +79,8 @@ export module DataService {
             if (!this.Options.LazyBoyOptions.views) {
                 this.Options.LazyBoyOptions.views = {};
             }
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.credential_db] = userViews;
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + this.Options.profile_db] = profileViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.credential_db] = userViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.profile_db] = profileViews;
         }
 
         /**

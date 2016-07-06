@@ -1,6 +1,6 @@
 {
   "name": "lazy-uac",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "layer of user access control.",
   "main": "dist/index.js",
   "typings": "dist/index",
