@@ -25,6 +25,9 @@ var DataService;
             if (!this.LazyBoy) {
                 this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
             }
+            else {
+                this.Options.LazyBoyOptions = this.LazyBoy.options;
+            }
         }
         /**
          * In order to restrict log to a specific level the variable {@link Log}

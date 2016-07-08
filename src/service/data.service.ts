@@ -39,6 +39,8 @@ export module DataService {
             this.LazyBoy = this.Options.LazyBoy;
             if (!this.LazyBoy) {
                 this.LazyBoy = new lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
+            }else{
+                this.Options.LazyBoyOptions = this.LazyBoy.options;
             }
         }
 
