@@ -1,6 +1,6 @@
 {
   "name": "lazy-uac",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "layer of user access control.",
   "main": "dist/index.js",
   "typings": "dist/index",
@@ -28,7 +28,7 @@
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
     "lazy-format-logger": "0.0.3",
-    "lazyboyjs": "0.0.11",
+    "lazyboyjs": "0.0.12",
     "typings": "^1.2.0"
   },
   "devDependencies": {
