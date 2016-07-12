@@ -24,16 +24,19 @@ var LazyUAC;
         /**
          * Starting the Manager to connect and initialized the databases, if needed.
          * @param callback {function(error: Error, result: Object)}
+         * @return {LazyUAC.UserManager} current instance.
          */
         UserManager.prototype.StartManager = function (callback) {
             this._dataSource.Connect(function (error, result) {
-                callback(error, result);
+                return callback(error, result);
             });
+            return this;
         };
         /**
          * In order to add a user to the system, we add VIEWER and USER role to the user.
          * @param user {User}
          * @param callback {function(error:Error, user:User)}
+         * @return {LazyUAC.UserManager} current instance.
          */
         UserManager.prototype.AddUser = function (user, callback) {
             this._ValidateDataSource();
@@ -41,45 +44,61 @@ var LazyUAC;
             this._dataSource.InsertUser(user, function (success) {
                 callback(success ? user : null);
             });
+            return this;
         };
         /**
          * To produce the access string for an User, the identity of the User as to be validated.
          * @param username {string} email address to retrieve the User inside the db.
          * @param password {string} password in clear to be compare with the one on the user instance
-         * @param callback
+         * @param callback {function(match: boolean, user: DataModel.User)}
+         * @return {LazyUAC.UserManager} current instance.
          */
         UserManager.prototype.Authenticate = function (username, password, callback) {
             this._ValidateDataSource();
             this._dataSource.GetUserByUserName(username, function (user) {
                 if (user) {
                     user.ComparePassword(password, function (match) {
-                        callback(match, user);
+                        return callback(match, user);
                     });
                 }
                 else {
-                    callback(false, null);
+                    return callback(false, null);
                 }
             });
+            return this;
         };
         /**
          * To remove an user the {@link lazyboyjs.LazyInstance} will be flag to delete.
          * @param userId {string} unique id of the instance to delete.
          * @param callback {function(delete: boolean)}
+         * @return {LazyUAC.UserManager} current instance.
          */
         UserManager.prototype.DeleteUser = function (userId, callback) {
             this._ValidateDataSource();
             this._dataSource.DeleteUser(userId, callback);
+            return this;
         };
         /**
          * To retrieve user trough database and return the only one match value.
          * @param username {string} user name to search.
          * @param callback {function(user: DataModel#User)}
+         * @return {LazyUAC.UserManager} current instance.
          */
         UserManager.prototype.GetUserByUserName = function (username, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserName(username, function (user) {
-                callback(user);
-            });
+            this._dataSource.GetUserByUserName(username, callback);
+            return this;
+        };
+        /**
+         *
+         * @param userId {string}
+         * @param callback {function(user: DataModel.User)}
+         * @return {LazyUAC.UserManager}
+         */
+        UserManager.prototype.GetUserById = function (userId, callback) {
+            this._ValidateDataSource();
+            this._dataSource.GetUserByUserId(userId, callback);
+            return this;
         };
         /**
          * In order to add {@link Role} to an {@link User}, the userId is used
@@ -87,6 +106,7 @@ var LazyUAC;
          * @param userId {string}
          * @param role {@link DataModel.Role}
          * @param callback {function(error: Error, done: boolean)}
+         * @return {LazyUAC.UserManager} current instance.
          */
         UserManager.prototype.AddRolesToUser = function (userId, role, callback) {
             var _this = this;
@@ -100,7 +120,15 @@ var LazyUAC;
                     return callback(false);
                 }
             });
+            return this;
         };
+        /**
+         *
+         * @param userId {string}
+         * @param role {DataModel.Role}
+         * @param callback {function(done: boolean)}
+         * @return {LazyUAC.UserManager}
+         */
         UserManager.prototype.RemoveRolesToUser = function (userId, role, callback) {
             var _this = this;
             this._ValidateDataSource();
@@ -113,7 +141,13 @@ var LazyUAC;
                 }
                 return callback(false);
             });
+            return this;
         };
+        /**
+         *
+         * @param user {DataModel.User}
+         * @param callback {function(done: boolean)}
+         */
         UserManager.prototype.UpdateUser = function (user, callback) {
             this._ValidateDataSource();
             this._dataSource.UpdateUser(user, callback);
