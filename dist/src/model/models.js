@@ -57,14 +57,16 @@ var DataModel;
             });
         };
         User.prototype.AddPasswordSync = function (password) {
-            var it = this;
-            var round = (Math.floor(Math.random() * 10) + 1);
-            Log.d("User", "AddPasswordSync", "Generating Salt", round);
-            var salt = bcript.genSaltSync(round);
-            Log.d("User", "AddPasswordSync", "Generating Hash", salt);
-            var hash = bcript.hashSync(password, salt);
-            Log.d("User", "AddPasswordSync", "password encrypted", hash);
-            it.Password = hash;
+            if (password) {
+                var it = this;
+                var round = (Math.floor(Math.random() * 10) + 1);
+                Log.d("User", "AddPasswordSync", "Generating SaltSync", round);
+                var salt = bcript.genSaltSync(round);
+                Log.d("User", "AddPasswordSync", "Generating HashSync", salt);
+                var hash = bcript.hashSync(password, salt);
+                Log.d("User", "AddPasswordSync", "password encrypted", hash);
+                it.Password = hash;
+            }
         };
         User.prototype.ComparePassword = function (password, callback) {
             bcript.compare(password, this.Password, function (error, result) {

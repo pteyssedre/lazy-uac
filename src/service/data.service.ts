@@ -82,7 +82,7 @@ export module DataService {
             this._getEntryByUserId(userId, (entry: lazyboyjs.LazyInstance): void=> {
                 if (entry) {
                     let u = new DataModel.User();
-                    let keys = Object.keys(entry);
+                    let keys = Object.keys(entry.instance);
                     for (var i = 0; i < keys.length; i++) {
                         let p = keys[i];
                         u[p] = entry[p];

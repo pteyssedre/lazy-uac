@@ -79,7 +79,7 @@ var DataService;
             this._getEntryByUserId(userId, function (entry) {
                 if (entry) {
                     var u = new models_1.DataModel.User();
-                    var keys = Object.keys(entry);
+                    var keys = Object.keys(entry.instance);
                     for (var i = 0; i < keys.length; i++) {
                         var p = keys[i];
                         u[p] = entry[p];

@@ -67,14 +67,16 @@ export module DataModel {
         }
 
         public AddPasswordSync(password: string): void {
-            let it = this;
-            let round = (Math.floor(Math.random() * 10) + 1);
-            Log.d("User", "AddPasswordSync", "Generating Salt", round);
-            let salt = bcript.genSaltSync(round);
-            Log.d("User", "AddPasswordSync", "Generating Hash", salt);
-            let hash = bcript.hashSync(password, salt);
-            Log.d("User", "AddPasswordSync", "password encrypted", hash);
-            it.Password = hash;
+            if (password) {
+                let it = this;
+                let round = (Math.floor(Math.random() * 10) + 1);
+                Log.d("User", "AddPasswordSync", "Generating SaltSync", round);
+                let salt = bcript.genSaltSync(round);
+                Log.d("User", "AddPasswordSync", "Generating HashSync", salt);
+                let hash = bcript.hashSync(password, salt);
+                Log.d("User", "AddPasswordSync", "password encrypted", hash);
+                it.Password = hash;
+            }
         }
 
         public ComparePassword(password: string, callback: (match: boolean)=>void): void {
