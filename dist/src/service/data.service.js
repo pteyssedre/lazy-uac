@@ -78,13 +78,7 @@ var DataService;
         LazyDataServer.prototype.GetUserByUserId = function (userId, callback) {
             this._getEntryByUserId(userId, function (entry) {
                 if (entry) {
-                    var u = new models_1.DataModel.User();
-                    var keys = Object.keys(entry.instance);
-                    for (var i = 0; i < keys.length; i++) {
-                        var p = keys[i];
-                        u[p] = entry[p];
-                    }
-                    callback(u);
+                    callback(new models_1.DataModel.User(entry));
                 }
                 else {
                     callback(null);
@@ -99,13 +93,7 @@ var DataService;
         LazyDataServer.prototype.GetUserByUserName = function (username, callback) {
             this._getEntryByUserName(username, function (entry) {
                 if (entry) {
-                    var u = new models_1.DataModel.User();
-                    var keys = Object.keys(entry.instance);
-                    for (var i = 0; i < keys.length; i++) {
-                        var p = keys[i];
-                        u[p] = entry.instance[p];
-                    }
-                    callback(u);
+                    callback(new models_1.DataModel.User(entry));
                 }
                 else {
                     callback(null);

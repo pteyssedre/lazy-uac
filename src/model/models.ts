@@ -1,5 +1,5 @@
 import * as bcript from "bcrypt-nodejs";
-
+import { lazyboyjs } from  "lazyboyjs";
 import lazyFormatLogger = require("lazy-format-logger");
 
 export module DataModel {
@@ -35,16 +35,20 @@ export module DataModel {
         public Password: string;
         public Roles: Role;
 
-        constructor(firstName?: string, lastName?: string, email?: string, password?: string, roles?: Role) {
-            this.Id = Utils.newGuid();
-            this.FirstName = firstName;
-            this.LastName = lastName;
-            this.Email = email;
-            this.Roles = roles;
-            this.AddPasswordSync(password);
+        constructor(entry: lazyboyjs.LazyInstance) {
+            let e = entry.instance;
+            this.Id = e.Id;
+            this.FirstName = e.FirstName;
+            this.LastName = e.LastName;
+            this.Email = e.Email;
+            this.Roles = e.Roles;
+            this.Password = e.Password;
         }
 
         public AddPassword(password: string, callback: ()=>void): void {
+            if (!password) {
+                throw new Error("password doesn't contain value");
+            }
             let it = this;
             let round = (Math.floor(Math.random() * 10) + 1);
             Log.d("User", "AddPassword", "Generating Salt", round);
@@ -80,6 +84,9 @@ export module DataModel {
         }
 
         public ComparePassword(password: string, callback: (match: boolean)=>void): void {
+            if (!password) {
+                throw new Error("password doesn't contain value");
+            }
             bcript.compare(password, this.Password, (error: Error, result: boolean): void => {
                 if (error) {
                     Log.c("User", "ComparePassword", error);
@@ -90,6 +97,9 @@ export module DataModel {
         }
 
         public ComparePasswordSync(password: string): boolean {
+            if (!password) {
+                throw new Error("password doesn't contain value");
+            }
             Log.d("User", "ComparePasswordSync", "comparing", password, this.Password);
             return bcript.compareSync(password, this.Password);
         }
@@ -107,12 +117,13 @@ export module DataModel {
         public PublicKey: string;
         public PrivateKey: string;
 
-        constructor(user?: User, description?: string, avatar?: string, pkey?: string, prkey?: string) {
-            this.UserId = user ? user.Id : '';
-            this.Description = description;
-            this.Avatar = avatar;
-            this.PublicKey = pkey;
-            this.PrivateKey = prkey;
+        constructor(entry: lazyboyjs.LazyInstance) {
+            let e = entry.instance;
+            this.UserId = e.UserId;
+            this.Description = e.Description;
+            this.Avatar = e.Avatar;
+            this.PublicKey = e.PublicKey;
+            this.PrivateKey = e.PrivateKey;
         }
     }
 

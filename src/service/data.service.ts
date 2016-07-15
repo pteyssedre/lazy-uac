@@ -81,13 +81,7 @@ export module DataService {
         public GetUserByUserId(userId: string, callback: (user: DataModel.User)=>void): void {
             this._getEntryByUserId(userId, (entry: lazyboyjs.LazyInstance): void=> {
                 if (entry) {
-                    let u = new DataModel.User();
-                    let keys = Object.keys(entry.instance);
-                    for (var i = 0; i < keys.length; i++) {
-                        let p = keys[i];
-                        u[p] = entry[p];
-                    }
-                    callback(u);
+                    callback(new DataModel.User(entry));
                 } else {
                     callback(null);
                 }
@@ -102,13 +96,7 @@ export module DataService {
         public GetUserByUserName(username: string, callback: (user: DataModel.User)=>void): void {
             this._getEntryByUserName(username, (entry: lazyboyjs.LazyInstance): void => {
                 if (entry) {
-                    let u = new DataModel.User();
-                    let keys = Object.keys(entry.instance);
-                    for (var i = 0; i < keys.length; i++) {
-                        let p = keys[i];
-                        u[p] = entry.instance[p];
-                    }
-                    callback(u);
+                    callback(new DataModel.User(entry));
                 } else {
                     callback(null);
                 }

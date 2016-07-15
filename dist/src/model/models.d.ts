@@ -1,3 +1,4 @@
+import { lazyboyjs } from "lazyboyjs";
 import lazyFormatLogger = require("lazy-format-logger");
 export declare module DataModel {
     class Utils {
@@ -17,7 +18,7 @@ export declare module DataModel {
         Email: string;
         Password: string;
         Roles: Role;
-        constructor(firstName?: string, lastName?: string, email?: string, password?: string, roles?: Role);
+        constructor(entry: lazyboyjs.LazyInstance);
         AddPassword(password: string, callback: () => void): void;
         AddPasswordSync(password: string): void;
         ComparePassword(password: string, callback: (match: boolean) => void): void;
@@ -30,6 +31,6 @@ export declare module DataModel {
         Avatar: string;
         PublicKey: string;
         PrivateKey: string;
-        constructor(user?: User, description?: string, avatar?: string, pkey?: string, prkey?: string);
+        constructor(entry: lazyboyjs.LazyInstance);
     }
 }

@@ -27,15 +27,19 @@ var DataModel;
     })(DataModel.Role || (DataModel.Role = {}));
     var Role = DataModel.Role;
     var User = (function () {
-        function User(firstName, lastName, email, password, roles) {
-            this.Id = Utils.newGuid();
-            this.FirstName = firstName;
-            this.LastName = lastName;
-            this.Email = email;
-            this.Roles = roles;
-            this.AddPasswordSync(password);
+        function User(entry) {
+            var e = entry.instance;
+            this.Id = e.Id;
+            this.FirstName = e.FirstName;
+            this.LastName = e.LastName;
+            this.Email = e.Email;
+            this.Roles = e.Roles;
+            this.Password = e.Password;
         }
         User.prototype.AddPassword = function (password, callback) {
+            if (!password) {
+                throw new Error("password doesn't contain value");
+            }
             var it = this;
             var round = (Math.floor(Math.random() * 10) + 1);
             Log.d("User", "AddPassword", "Generating Salt", round);
@@ -69,6 +73,9 @@ var DataModel;
             }
         };
         User.prototype.ComparePassword = function (password, callback) {
+            if (!password) {
+                throw new Error("password doesn't contain value");
+            }
             bcript.compare(password, this.Password, function (error, result) {
                 if (error) {
                     Log.c("User", "ComparePassword", error);
@@ -78,6 +85,9 @@ var DataModel;
             });
         };
         User.prototype.ComparePasswordSync = function (password) {
+            if (!password) {
+                throw new Error("password doesn't contain value");
+            }
             Log.d("User", "ComparePasswordSync", "comparing", password, this.Password);
             return bcript.compareSync(password, this.Password);
         };
@@ -88,12 +98,13 @@ var DataModel;
     }());
     DataModel.User = User;
     var Profile = (function () {
-        function Profile(user, description, avatar, pkey, prkey) {
-            this.UserId = user ? user.Id : '';
-            this.Description = description;
-            this.Avatar = avatar;
-            this.PublicKey = pkey;
-            this.PrivateKey = prkey;
+        function Profile(entry) {
+            var e = entry.instance;
+            this.UserId = e.UserId;
+            this.Description = e.Description;
+            this.Avatar = e.Avatar;
+            this.PublicKey = e.PublicKey;
+            this.PrivateKey = e.PrivateKey;
         }
         return Profile;
     }());
