@@ -3,16 +3,30 @@ var expect = chai.expect;
 var LazyUAC = require('../dist/src/uac').LazyUAC;
 var DataModel = require('../dist/src/model/models').DataModel;
 
+function GetDefaultUser() {
+    return new DataModel.User({
+        instance: {
+            Id: "1235567", FirstName: "Pierre",
+            LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
+            Role: DataModel.Role.VIEWER | DataModel.Role.USER
+        }
+    });
+}
+
+function GetDefaultUserWithPassword(password){
+    var user = GetDefaultUser();
+    user.AddPasswordSync(password);
+    return user;
+}
 //noinspection JSUnresolvedFunction
 describe('Module', function () {
     //noinspection JSUnresolvedFunction
     describe('DataModel', function () {
-
         //noinspection JSUnresolvedFunction
         describe('UserModel test', function () {
             //noinspection JSUnresolvedFunction
             it('Should create an User and encrypt a Password in async mode', function (done) {
-                var user = new DataModel.User("Pierre", "Teyssedre", "pierre@teyssedre.ca");
+                var user = GetDefaultUser();
                 user.AddPassword("chiendechasse", function () {
                     //noinspection JSUnresolvedVariable
                     expect(user.Password).to.not.equal("chiendechasse");
@@ -23,7 +37,7 @@ describe('Module', function () {
             });
             //noinspection JSUnresolvedFunction
             it('Should create an User and encrypt a Password in sync mode', function () {
-                var user = new DataModel.User("Pierre", "Teyssedre", "pierre@teyssedre.ca");
+                var user = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 //noinspection JSUnresolvedVariable
                 expect(user.Password).to.not.equal("chiendechasse");
@@ -32,7 +46,7 @@ describe('Module', function () {
             });
             //noinspection JSUnresolvedFunction
             it('Should return true on password compare in async mode', function () {
-                var user = new DataModel.User("Pierre", "Teyssedre", "pierre@teyssedre.ca");
+                var user = GetDefaultUser();
                 user.AddPassword("chiendechasse", function () {
                     //noinspection JSUnresolvedVariable
                     expect(user.Password).to.not.equal("chiendechasse");
@@ -44,7 +58,7 @@ describe('Module', function () {
             });
             //noinspection JSUnresolvedFunction
             it('Should return true on password compare in sync mode', function () {
-                var user = new DataModel.User("Pierre", "Teyssedre", "pierre@teyssedre.ca");
+                var user = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 //noinspection JSUnresolvedVariable
                 expect(user.Password).to.not.equal("chiendechasse");
@@ -54,8 +68,8 @@ describe('Module', function () {
             });
             //noinspection JSUnresolvedFunction
             it('Should create two user using the same password but the hash should not be equal', function () {
-                var user = new DataModel.User("Pierre", "Teyssedre", "pierre@teyssedre.ca");
-                var user2 = new DataModel.User("Pierre2", "Teyssedre2", "pierre@teyssedre.ca");
+                var user = GetDefaultUser();
+                var user2 = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 user2.AddPasswordSync("chiendechasse");
                 //noinspection JSUnresolvedVariable
@@ -66,8 +80,8 @@ describe('Module', function () {
         describe('ProfileModel test', function () {
             //noinspection JSUnresolvedFunction
             it('Should create a profile', function () {
-                var user = new DataModel.User("Pierre", "Teyssedre", "pierre@teyssedre.ca");
-                var profile = new DataModel.Profile(user);
+                var user = GetDefaultUser();
+                var profile = new DataModel.Profile({instance: {UserId: user.Id}});
                 //noinspection JSUnresolvedVariable
                 expect(profile).to.not.equal(null);
                 //noinspection JSUnresolvedVariable
@@ -79,12 +93,7 @@ describe('Module', function () {
     describe('lazyUAC', function () {
 
         var mockPassword = "Reacts987";
-        var mockUser = new DataModel.User("Pierre",
-            "Teyssedre",
-            "pierre@teyssedre.ca",
-            mockPassword,
-            DataModel.Role.VIEWER | DataModel.Role.USER
-        );
+        var mockUser = GetDefaultUserWithPassword(mockPassword);
         var uac;
 
         //noinspection JSUnresolvedFunction
