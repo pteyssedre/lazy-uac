@@ -1,5 +1,5 @@
-import {DataModel} from "./model/models";
-import {DataService} from "./service/data.service";
+import { DataModel } from "./model/models";
+import { DataService } from "./service/data.service";
 import lazyFormatLogger = require("lazy-format-logger");
 
 export module LazyUAC {
@@ -113,6 +113,12 @@ export module LazyUAC {
         public GetUserById(userId: string, callback: (user: DataModel.User) => void): this {
             this._ValidateDataSource();
             this._dataSource.GetUserByUserId(userId, callback);
+            return this;
+        }
+
+        public GetAllUsers(callback: (list: DataModel.User[]) => void): this {
+            this._ValidateDataSource();
+            this._dataSource.GetAllUsers(callback);
             return this;
         }
 

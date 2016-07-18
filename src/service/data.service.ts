@@ -39,7 +39,7 @@ export module DataService {
             this.LazyBoy = this.Options.LazyBoy;
             if (!this.LazyBoy) {
                 this.LazyBoy = new lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
-            }else{
+            } else {
                 this.Options.LazyBoyOptions = this.LazyBoy.options;
             }
         }
@@ -157,6 +157,17 @@ export module DataService {
             });
         }
 
+        public GetAllUsers(callback: (list: DataModel.User[]) => void): void {
+            this.LazyBoy.GetViewResult(this.Options.credential_db, "allUsersNotDeleted", {reduce: false}, (error, data) => {
+                if (error) {
+                    Log.c("LazyDataServer", "GetViewResult", "LazyBoy.GetViewResult", error);
+                    throw error;
+                }
+                Log.d("LazyDataServer", "GetAllUsers", "LazyBoy.GetViewResult", data);
+                callback(data);
+            });
+        }
+
         /**
          * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
          * inside the object.
@@ -164,12 +175,12 @@ export module DataService {
          */
         private _validateOptions(): void {
             if (!this.Options) {
-                this.Options = { };
+                this.Options = {};
             }
-            if(!this.Options.credential_db){
+            if (!this.Options.credential_db) {
                 this.Options.credential_db = "auth";
             }
-            if(!this.Options.profile_db){
+            if (!this.Options.profile_db) {
                 this.Options.profile_db = "profile";
             }
             if (!this.Options.LazyBoyOptions) {
@@ -407,6 +418,10 @@ export module DataService {
         map: "function(doc){ if(doc.isDeleted) { emit(doc.type, doc); } }",
         reduce: "_count()"
     };
+    let allUsersNotDeleted: lazyboyjs.LazyView = {
+        map: "function(doc){ if(!doc.isDeleted && doc.type.toLowerCase() == 'user') { emit(doc.type, doc.instance); } }",
+        reduce: "_count()"
+    };
     let userViews: lazyboyjs.LazyDesignViews = {
         version: 1,
         type: 'javascript',
@@ -415,7 +430,8 @@ export module DataService {
             'userByEmail': userByEmail,
             'entryByUserId': entryByUserId,
             'entryByEmail': entryByEmail,
-            'deletedTypeEntry': deletedTypeEntry
+            'deletedTypeEntry': deletedTypeEntry,
+            'allUsersNotDeleted': allUsersNotDeleted
         }
     };
     let profileByUserId: lazyboyjs.LazyView = {
@@ -468,6 +484,7 @@ export module DataService {
         InsertUser(user: DataModel.User, callback: (success: boolean) => void): void;
         UpdateUser(user: DataModel.User, callback: (success: boolean) => void): void;
         DeleteUser(userId: string, callback: (success: boolean) => void): void;
+        GetAllUsers(callback: (list: DataModel.User[]) => void): void;
     }
 
 }

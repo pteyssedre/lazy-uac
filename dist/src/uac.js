@@ -100,6 +100,11 @@ var LazyUAC;
             this._dataSource.GetUserByUserId(userId, callback);
             return this;
         };
+        UserManager.prototype.GetAllUsers = function (callback) {
+            this._ValidateDataSource();
+            this._dataSource.GetAllUsers(callback);
+            return this;
+        };
         /**
          * In order to add {@link Role} to an {@link User}, the userId is used
          * to retrieve from the {@link _dataSource}

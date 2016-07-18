@@ -156,6 +156,16 @@ var DataService;
                 }
             });
         };
+        LazyDataServer.prototype.GetAllUsers = function (callback) {
+            this.LazyBoy.GetViewResult(this.Options.credential_db, "allUsersNotDeleted", { reduce: false }, function (error, data) {
+                if (error) {
+                    Log.c("LazyDataServer", "GetViewResult", "LazyBoy.GetViewResult", error);
+                    throw error;
+                }
+                Log.d("LazyDataServer", "GetAllUsers", "LazyBoy.GetViewResult", data);
+                callback(data);
+            });
+        };
         /**
          * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
          * inside the object.
@@ -399,6 +409,10 @@ var DataService;
         map: "function(doc){ if(doc.isDeleted) { emit(doc.type, doc); } }",
         reduce: "_count()"
     };
+    var allUsersNotDeleted = {
+        map: "function(doc){ if(!doc.isDeleted && doc.type.toLowerCase() == 'user') { emit(doc.type, doc.instance); } }",
+        reduce: "_count()"
+    };
     var userViews = {
         version: 1,
         type: 'javascript',
@@ -407,7 +421,8 @@ var DataService;
             'userByEmail': userByEmail,
             'entryByUserId': entryByUserId,
             'entryByEmail': entryByEmail,
-            'deletedTypeEntry': deletedTypeEntry
+            'deletedTypeEntry': deletedTypeEntry,
+            'allUsersNotDeleted': allUsersNotDeleted
         }
     };
     var profileByUserId = {

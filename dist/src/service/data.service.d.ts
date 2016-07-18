@@ -56,6 +56,7 @@ export declare module DataService {
          * @param callback {function(success: boolean): void}
          */
         DeleteUser(userId: string, callback: (success: boolean) => void): void;
+        GetAllUsers(callback: (list: DataModel.User[]) => void): void;
         /**
          * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
          * inside the object.
@@ -152,5 +153,6 @@ export declare module DataService {
         InsertUser(user: DataModel.User, callback: (success: boolean) => void): void;
         UpdateUser(user: DataModel.User, callback: (success: boolean) => void): void;
         DeleteUser(userId: string, callback: (success: boolean) => void): void;
+        GetAllUsers(callback: (list: DataModel.User[]) => void): void;
     }
 }
