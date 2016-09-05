@@ -29,12 +29,11 @@ var DataModel;
     var User = (function () {
         function User(entry) {
             var e = entry.instance;
-            this.Id = e.Id;
-            this.FirstName = e.FirstName;
-            this.LastName = e.LastName;
-            this.Email = e.Email;
-            this.Roles = e.Roles;
-            this.Password = e.Password;
+            var keys = Object.keys(e);
+            for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+                var key = keys_1[_i];
+                this[key] = e[key];
+            }
         }
         User.prototype.AddPassword = function (password, callback) {
             if (!password) {

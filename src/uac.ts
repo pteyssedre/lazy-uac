@@ -116,6 +116,11 @@ export module LazyUAC {
             return this;
         }
 
+        /**
+         * Function to retrieved all users from db.
+         * @param callback {function(list: DataModel.User[])}
+         * @return {LazyUAC.UserManager}
+         */
         public GetAllUsers(callback: (list: DataModel.User[]) => void): this {
             this._ValidateDataSource();
             this._dataSource.GetAllUsers(callback);

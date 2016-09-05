@@ -100,6 +100,11 @@ var LazyUAC;
             this._dataSource.GetUserByUserId(userId, callback);
             return this;
         };
+        /**
+         * Function to retrieved all users from db.
+         * @param callback {function(list: DataModel.User[])}
+         * @return {LazyUAC.UserManager}
+         */
         UserManager.prototype.GetAllUsers = function (callback) {
             this._ValidateDataSource();
             this._dataSource.GetAllUsers(callback);

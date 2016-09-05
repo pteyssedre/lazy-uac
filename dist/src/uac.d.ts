@@ -54,6 +54,11 @@ export declare module LazyUAC {
          * @return {LazyUAC.UserManager}
          */
         GetUserById(userId: string, callback: (user: DataModel.User) => void): this;
+        /**
+         * Function to retrieved all users from db.
+         * @param callback {function(list: DataModel.User[])}
+         * @return {LazyUAC.UserManager}
+         */
         GetAllUsers(callback: (list: DataModel.User[]) => void): this;
         /**
          * In order to add {@link Role} to an {@link User}, the userId is used
