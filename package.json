@@ -28,7 +28,7 @@
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
     "lazy-format-logger": "0.0.1",
-    "lazyboyjs": "0.0.1",
+    "lazyboyjs": "0.0.2",
     "typings": "^1.2.0"
   },
   "devDependencies": {
