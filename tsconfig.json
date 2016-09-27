@@ -3,7 +3,7 @@
   "compilerOptions": {
     "declaration": true,
     "module": "commonjs",
-    "target": "es5",
+    "target": "es6",
     "sourceMap": false,
     "outDir": "dist",
     "noImplicitAny": false
@@ -17,6 +17,7 @@
     "src/uac.ts",
     "src/model/models.ts",
     "src/service/data.service.ts",
-    "typings/index.d.ts"
+    "typings/index.d.ts",
+    "test/TestAsync.ts"
   ]
 }

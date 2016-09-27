@@ -1,23 +1,20 @@
 "use strict";
-var bcript = require("bcrypt-nodejs");
-var lazyFormatLogger = require("lazy-format-logger");
+const bcript = require("bcrypt-nodejs");
+const lazyFormatLogger = require("lazy-format-logger");
 var DataModel;
 (function (DataModel) {
-    var Log = new lazyFormatLogger.Logger();
-    var Utils = (function () {
-        function Utils() {
-        }
-        Utils.newGuid = function () {
+    let Log = new lazyFormatLogger.Logger();
+    class Utils {
+        static newGuid() {
             return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
+                let r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
-        };
-        Utils.setLevel = function (level) {
+        }
+        static setLevel(level) {
             Log = new lazyFormatLogger.Logger(level);
-        };
-        return Utils;
-    }());
+        }
+    }
     DataModel.Utils = Utils;
     (function (Role) {
         Role[Role["VIEWER"] = 1] = "VIEWER";
@@ -26,29 +23,30 @@ var DataModel;
         Role[Role["SUPER_ADMIN"] = 8] = "SUPER_ADMIN";
     })(DataModel.Role || (DataModel.Role = {}));
     var Role = DataModel.Role;
-    var User = (function () {
-        function User(entry) {
-            var e = entry.instance;
-            var keys = Object.keys(e);
-            for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-                var key = keys_1[_i];
-                this[key] = e[key];
+    class User {
+        constructor(entry) {
+            if (entry && entry.instance) {
+                let e = entry.instance;
+                let keys = Object.keys(e);
+                for (let key of keys) {
+                    this[key] = e[key];
+                }
             }
         }
-        User.prototype.AddPassword = function (password, callback) {
+        AddPassword(password, callback) {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
-            var it = this;
-            var round = (Math.floor(Math.random() * 10) + 1);
+            let it = this;
+            let round = (Math.floor(Math.random() * 10) + 1);
             Log.d("User", "AddPassword", "Generating Salt", round);
-            bcript.genSalt(round, function (error, salt) {
+            bcript.genSalt(round, (error, salt) => {
                 if (error) {
                     Log.c("User", "AddPassword", "bcript.genSalt", error);
                     throw error;
                 }
                 Log.d("User", "Generating Hash", salt);
-                bcript.hash(password, salt, it.cryptingProgress, function (error, hash) {
+                bcript.hash(password, salt, it.cryptingProgress, (error, hash) => {
                     if (error) {
                         Log.c("User", "AddPassword", "bcript.hash", error);
                         throw error;
@@ -58,54 +56,52 @@ var DataModel;
                     callback();
                 });
             });
-        };
-        User.prototype.AddPasswordSync = function (password) {
+        }
+        AddPasswordSync(password) {
             if (password) {
-                var it = this;
-                var round = (Math.floor(Math.random() * 10) + 1);
+                let it = this;
+                let round = (Math.floor(Math.random() * 10) + 1);
                 Log.d("User", "AddPasswordSync", "Generating SaltSync", round);
-                var salt = bcript.genSaltSync(round);
+                let salt = bcript.genSaltSync(round);
                 Log.d("User", "AddPasswordSync", "Generating HashSync", salt);
-                var hash = bcript.hashSync(password, salt);
+                let hash = bcript.hashSync(password, salt);
                 Log.d("User", "AddPasswordSync", "password encrypted", hash);
                 it.Password = hash;
             }
-        };
-        User.prototype.ComparePassword = function (password, callback) {
+        }
+        ComparePassword(password, callback) {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
-            bcript.compare(password, this.Password, function (error, result) {
+            bcript.compare(password, this.Password, (error, result) => {
                 if (error) {
                     Log.c("User", "ComparePassword", error);
                     throw error;
                 }
                 callback(result);
             });
-        };
-        User.prototype.ComparePasswordSync = function (password) {
+        }
+        ComparePasswordSync(password) {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
             Log.d("User", "ComparePasswordSync", "comparing", password, this.Password);
             return bcript.compareSync(password, this.Password);
-        };
-        User.prototype.cryptingProgress = function () {
+        }
+        cryptingProgress() {
             //Log.d("", "in progress");
-        };
-        return User;
-    }());
+        }
+    }
     DataModel.User = User;
-    var Profile = (function () {
-        function Profile(entry) {
-            var e = entry.instance;
+    class Profile {
+        constructor(entry) {
+            let e = entry.instance;
             this.UserId = e.UserId;
             this.Description = e.Description;
             this.Avatar = e.Avatar;
             this.PublicKey = e.PublicKey;
             this.PrivateKey = e.PrivateKey;
         }
-        return Profile;
-    }());
+    }
     DataModel.Profile = Profile;
 })(DataModel = exports.DataModel || (exports.DataModel = {}));

@@ -18,7 +18,7 @@ export declare module DataModel {
         Email: string;
         Password: string;
         Roles: Role;
-        constructor(entry: lazyboyjs.LazyInstance);
+        constructor(entry?: lazyboyjs.LazyInstance);
         AddPassword(password: string, callback: () => void): void;
         AddPasswordSync(password: string): void;
         ComparePassword(password: string, callback: (match: boolean) => void): void;

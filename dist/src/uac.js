@@ -1,51 +1,100 @@
 "use strict";
-var models_1 = require("./model/models");
-var data_service_1 = require("./service/data.service");
-var lazyFormatLogger = require("lazy-format-logger");
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator.throw(value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments)).next());
+    });
+};
+const models_1 = require("./model/models");
+const data_service_1 = require("./service/data.service");
+const lazyFormatLogger = require("lazy-format-logger");
 var LazyUAC;
 (function (LazyUAC) {
-    var Log = new lazyFormatLogger.Logger();
-    var UserManager = (function () {
-        function UserManager(options) {
+    let Log = new lazyFormatLogger.Logger();
+    class UserManager {
+        constructor(options) {
             this.options = options;
             if (!this.options) {
                 this.options = {};
             }
             this._dataSource = this.options.dataSource;
             if (!this._dataSource) {
-                this._dataSource = new data_service_1.DataService.LazyDataServer(this.options.dataSourceOptions);
+                this._dataSource = new data_service_1.DataService.LazyDataServerAsync(this.options.dataSourceOptions);
             }
             this._ValidateDataSource();
         }
-        UserManager.setLevel = function (level) {
+        static setLevel(level) {
             Log = new lazyFormatLogger.Logger(level);
             data_service_1.DataService.LazyDataServer.setLevel(level);
-        };
+        }
         /**
          * Starting the Manager to connect and initialized the databases, if needed.
          * @param callback {function(error: Error, result: Object)}
          * @return {LazyUAC.UserManager} current instance.
          */
-        UserManager.prototype.StartManager = function (callback) {
-            this._dataSource.Connect(function (error, result) {
+        StartManager(callback) {
+            this._dataSource.Connect((error, result) => {
                 return callback(error, result);
             });
             return this;
-        };
+        }
+        /**
+         * Starting the Manager to connect and initialized the databases, if needed.
+         * @return {Promise<boolean>}
+         * @constructor
+         */
+        StartManagerAsync() {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = false;
+                    try {
+                        let result = yield this._dataSource.ConnectAsync();
+                        r = !result.error;
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * In order to add a user to the system, we add VIEWER and USER role to the user.
          * @param user {User}
          * @param callback {function(error:Error, user:User)}
          * @return {LazyUAC.UserManager} current instance.
          */
-        UserManager.prototype.AddUser = function (user, callback) {
+        AddUser(user, callback) {
             this._ValidateDataSource();
             user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
-            this._dataSource.InsertUser(user, function (success) {
+            this._dataSource.InsertUser(user, (success) => {
                 callback(success ? user : null);
             });
             return this;
-        };
+        }
+        /**
+         * In order to add a user to the system, we add VIEWER and USER role to the user.
+         * @param user {DataModel.User}
+         * @return {Promise<DataModel.User>}
+         */
+        AddUserAsync(user) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = null;
+                    try {
+                        user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
+                        let report = yield this._dataSource.InsertUserAsync(user);
+                        r = report.user;
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * To produce the access string for an User, the identity of the User as to be validated.
          * @param username {string} email address to retrieve the User inside the db.
@@ -53,11 +102,11 @@ var LazyUAC;
          * @param callback {function(match: boolean, user: DataModel.User)}
          * @return {LazyUAC.UserManager} current instance.
          */
-        UserManager.prototype.Authenticate = function (username, password, callback) {
+        Authenticate(username, password, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserName(username, function (user) {
+            this._dataSource.GetUserByUserName(username, (user) => {
                 if (user) {
-                    user.ComparePassword(password, function (match) {
+                    user.ComparePassword(password, (match) => {
                         return callback(match, user);
                     });
                 }
@@ -66,50 +115,150 @@ var LazyUAC;
                 }
             });
             return this;
-        };
+        }
+        /**
+         * To produce the access string for an User, the identity of the User as to be validated.
+         * @param username {string} email address to retrieve the User inside the db.
+         * @param password {string} password in clear to be compare with the one on the user instance
+         * @return {Promise<{match: boolean, user: DataModel.User}>}
+         */
+        AuthenticateAsync(username, password) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = { match: false, user: null };
+                    try {
+                        let user = yield this._dataSource.GetUserByUserNameAsync(username);
+                        r.user = user;
+                        if (user) {
+                            user.ComparePassword(password, (match) => {
+                                r.match = match;
+                                return resolve(r);
+                            });
+                        }
+                        else {
+                            return resolve(r);
+                        }
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * To remove an user the {@link lazyboyjs.LazyInstance} will be flag to delete.
          * @param userId {string} unique id of the instance to delete.
          * @param callback {function(delete: boolean)}
          * @return {LazyUAC.UserManager} current instance.
          */
-        UserManager.prototype.DeleteUser = function (userId, callback) {
+        DeleteUser(userId, callback) {
             this._ValidateDataSource();
             this._dataSource.DeleteUser(userId, callback);
             return this;
-        };
+        }
+        /**
+         * To remove an user the {@link lazyboyjs.LazyInstance} will be flag to delete.
+         * @param userId {string} unique id of the instance to delete.
+         * @return {Promise<boolean>}
+         */
+        DeleteUserAsync(userId) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = false;
+                    try {
+                        r = yield this._dataSource.DeleteUserAsync(userId);
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * To retrieve user trough database and return the only one match value.
          * @param username {string} user name to search.
          * @param callback {function(user: DataModel#User)}
          * @return {LazyUAC.UserManager} current instance.
          */
-        UserManager.prototype.GetUserByUserName = function (username, callback) {
+        GetUserByUserName(username, callback) {
             this._ValidateDataSource();
             this._dataSource.GetUserByUserName(username, callback);
             return this;
-        };
+        }
         /**
-         *
+         * To retrieve user trough database and return the only one match value.
+         * @param username {string} user name to search.
+         * @return {Promise<DataModel.User>}
+         */
+        GetUserByUserNameAsync(username) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = null;
+                    try {
+                        r = yield this._dataSource.GetUserByUserNameAsync(username);
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
+        /**
+         * To retrieve user trough database and return the only one match value.
          * @param userId {string}
          * @param callback {function(user: DataModel.User)}
          * @return {LazyUAC.UserManager}
          */
-        UserManager.prototype.GetUserById = function (userId, callback) {
+        GetUserById(userId, callback) {
             this._ValidateDataSource();
             this._dataSource.GetUserByUserId(userId, callback);
             return this;
-        };
+        }
+        /**
+         * To retrieve user trough database and return the only one match value.
+         * @param userId {string}
+         * @return {Promise<DataModel.User>}
+         */
+        GetUserByIdAsync(userId) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = null;
+                    try {
+                        r = yield this._dataSource.GetUserByUserIdAsync(userId);
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * Function to retrieved all users from db.
          * @param callback {function(list: DataModel.User[])}
          * @return {LazyUAC.UserManager}
          */
-        UserManager.prototype.GetAllUsers = function (callback) {
+        GetAllUsers(callback) {
             this._ValidateDataSource();
             this._dataSource.GetAllUsers(callback);
             return this;
-        };
+        }
+        GetAllUsersAsync() {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = null;
+                    try {
+                        r = yield this._dataSource.GetAllUsersAsync();
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * In order to add {@link Role} to an {@link User}, the userId is used
          * to retrieve from the {@link _dataSource}
@@ -118,20 +267,44 @@ var LazyUAC;
          * @param callback {function(error: Error, done: boolean)}
          * @return {LazyUAC.UserManager} current instance.
          */
-        UserManager.prototype.AddRolesToUser = function (userId, role, callback) {
-            var _this = this;
+        AddRolesToUser(userId, role, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, function (user) {
+            this._dataSource.GetUserByUserId(userId, (user) => {
                 if (user) {
                     user.Roles |= role;
-                    _this.UpdateUser(user, callback);
+                    this.UpdateUser(user, callback);
                 }
                 else {
                     return callback(false);
                 }
             });
             return this;
-        };
+        }
+        /**
+         * In order to add {@link Role} to an {@link User}, the userId is used
+         * to retrieve from the {@link _dataSource}
+         * @param userId
+         * @param role {@link DataModel.Role}
+         * @return {Promise<boolean>}
+         */
+        AddRolesToUserAsync(userId, role) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = false;
+                    try {
+                        let user = yield this._dataSource.GetUserByUserIdAsync(userId);
+                        if (user) {
+                            user.Roles |= role;
+                            r = yield this.UpdateUserAsync(user);
+                        }
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          *
          * @param userId {string}
@@ -139,41 +312,85 @@ var LazyUAC;
          * @param callback {function(done: boolean)}
          * @return {LazyUAC.UserManager}
          */
-        UserManager.prototype.RemoveRolesToUser = function (userId, role, callback) {
-            var _this = this;
+        RemoveRolesToUser(userId, role, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, function (user) {
+            this._dataSource.GetUserByUserId(userId, (user) => {
                 if (user) {
                     if (user.Roles >= role) {
                         user.Roles -= role;
-                        _this.UpdateUser(user, callback);
+                        this.UpdateUser(user, callback);
                     }
                 }
                 return callback(false);
             });
             return this;
-        };
+        }
+        /**
+         * Remove {@link DataModel.User#Roles} from user given an UserId.
+         * @param userId {string} unique identifier.
+         * @param role {DataModel.Role}
+         * @return {Promise<boolean>}
+         */
+        RemoveRolesToUserAsync(userId, role) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = false;
+                    try {
+                        let user = yield this._dataSource.GetUserByUserIdAsync(userId);
+                        if (user) {
+                            if (user.Roles >= role) {
+                                user.Roles -= role;
+                                r = yield this.UpdateUserAsync(user);
+                            }
+                        }
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          *
          * @param user {DataModel.User}
          * @param callback {function(done: boolean)}
          */
-        UserManager.prototype.UpdateUser = function (user, callback) {
+        UpdateUser(user, callback) {
             this._ValidateDataSource();
             this._dataSource.UpdateUser(user, callback);
-        };
+        }
+        /**
+         *
+         * @param user {DataModel.User}
+         * @return {Promise<boolean>}
+         */
+        UpdateUserAsync(user) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = false;
+                    try {
+                        let report = yield this._dataSource.UpdateUserAsync(user);
+                        r = report.updated;
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * Helper to validate the state of the {@link _dataSource} property.
          * @private
          */
-        UserManager.prototype._ValidateDataSource = function () {
+        _ValidateDataSource() {
             if (!this._dataSource) {
-                var error = new data_service_1.DataService.DataSourceException("data source can't be null");
+                let error = new data_service_1.DataService.DataSourceException("data source can't be null");
                 Log.c("UserManager", "ValidateDataSource", error);
                 throw error;
             }
-        };
-        return UserManager;
-    }());
+        }
+    }
     LazyUAC.UserManager = UserManager;
 })(LazyUAC = exports.LazyUAC || (exports.LazyUAC = {}));

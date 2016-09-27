@@ -2,6 +2,9 @@
   "name": "lazy-uac",
   "dependencies": {},
   "globalDependencies": {
-    "bcrypt-nodejs": "registry:dt/bcrypt-nodejs#0.0.0+20160316155526"
+    "bcrypt-nodejs": "registry:dt/bcrypt-nodejs#0.0.0+20160316155526",
+    "chai": "registry:dt/chai#3.4.0+20160601211834",
+    "mocha": "registry:dt/mocha#2.2.5+20160720003353",
+    "node": "registry:dt/node#6.0.0+20160923124626"
   }
 }

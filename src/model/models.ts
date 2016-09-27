@@ -35,11 +35,13 @@ export module DataModel {
         public Password: string;
         public Roles: Role;
 
-        constructor(entry: lazyboyjs.LazyInstance) {
-            let e = entry.instance;
-            let keys = Object.keys(e);
-            for (let key of keys) {
-                this[key] = e[key];
+        constructor(entry?: lazyboyjs.LazyInstance) {
+            if (entry && entry.instance) {
+                let e = entry.instance;
+                let keys = Object.keys(e);
+                for (let key of keys) {
+                    this[key] = e[key];
+                }
             }
         }
 
