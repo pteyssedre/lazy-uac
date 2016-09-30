@@ -4,12 +4,15 @@ import lazyFormatLogger = require("lazy-format-logger");
 export declare module LazyUAC {
     interface UacOptions {
         logLevel?: lazyFormatLogger.LogLevel;
-        dataSource?: DataService.UacDdaAsync;
+        useAsync?: boolean;
+        dataSource?: DataService.UacDBA;
+        dataSourceAsync?: DataService.UacDdaAsync;
         dataSourceOptions?: DataService.LazyDataSourceConfig;
     }
     class UserManager {
         options: UacOptions;
         static setLevel(level: lazyFormatLogger.LogLevel): void;
+        private _dataSourceAsync;
         private _dataSource;
         constructor(options?: UacOptions);
         /**

@@ -8,7 +8,9 @@ export module LazyUAC {
 
     export interface UacOptions {
         logLevel?: lazyFormatLogger.LogLevel,
-        dataSource?: DataService.UacDdaAsync,
+        useAsync?: boolean,
+        dataSource?: DataService.UacDBA,
+        dataSourceAsync?: DataService.UacDdaAsync,
         dataSourceOptions?: DataService.LazyDataSourceConfig
     }
 
@@ -16,18 +18,29 @@ export module LazyUAC {
 
         public static setLevel(level: lazyFormatLogger.LogLevel): void {
             Log = new lazyFormatLogger.Logger(level);
-            DataService.LazyDataServer.setLevel(level);
+            DataService.LazyDataServerBase.setLevel(level);
         }
 
-        private _dataSource: DataService.UacDdaAsync;
+        private _dataSourceAsync: DataService.UacDdaAsync;
+        private _dataSource: DataService.UacDBA;
 
         constructor(public options?: UacOptions) {
             if (!this.options) {
                 this.options = {};
             }
-            this._dataSource = this.options.dataSource;
-            if (!this._dataSource) {
-                this._dataSource = new DataService.LazyDataServerAsync(this.options.dataSourceOptions);
+            if (this.options.logLevel) {
+                UserManager.setLevel(this.options.logLevel);
+            }
+            if (this.options.useAsync) {
+                this._dataSourceAsync = this.options.dataSourceAsync;
+                if (!this._dataSourceAsync) {
+                    this._dataSourceAsync = new DataService.LazyDataServerAsync(this.options.dataSourceOptions);
+                }
+            } else {
+                this._dataSource = this.options.dataSource;
+                if (!this._dataSource && !this.options.useAsync) {
+                    this._dataSource = new DataService.LazyDataServer(this.options.dataSourceOptions);
+                }
             }
             this._ValidateDataSource();
         }
@@ -38,9 +51,13 @@ export module LazyUAC {
          * @return {LazyUAC.UserManager} current instance.
          */
         public StartManager(callback: (error: Error, result: any)=>void): this {
-            this._dataSource.Connect((error: Error, result: any): void => {
-                return callback(error, result);
-            });
+            if (!this.options.useAsync) {
+                this._dataSource.Connect((error: Error, result: any): void => {
+                    return callback(error, result);
+                });
+            } else {
+                Log.e("UAC", "StartManager", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -53,7 +70,7 @@ export module LazyUAC {
             return new Promise<boolean>(async(resolve, reject)=> {
                 let r: boolean = false;
                 try {
-                    let result = await this._dataSource.ConnectAsync();
+                    let result = await this._dataSourceAsync.ConnectAsync();
                     r = !result.error;
                     return resolve(r);
                 } catch (exception) {
@@ -70,10 +87,14 @@ export module LazyUAC {
          */
         public AddUser(user: DataModel.User, callback: (user: DataModel.User) => void): this {
             this._ValidateDataSource();
-            user.Roles |= DataModel.Role.VIEWER | DataModel.Role.USER;
-            this._dataSource.InsertUser(user, (success: boolean): void => {
-                callback(success ? user : null);
-            });
+            if (!this.options.useAsync) {
+                user.Roles |= DataModel.Role.VIEWER | DataModel.Role.USER;
+                this._dataSource.InsertUser(user, (success: boolean): void => {
+                    callback(success ? user : null);
+                });
+            } else {
+                Log.e("UAC", "AddUser", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -87,7 +108,7 @@ export module LazyUAC {
                 let r: DataModel.User = null;
                 try {
                     user.Roles |= DataModel.Role.VIEWER | DataModel.Role.USER;
-                    let report = await this._dataSource.InsertUserAsync(user);
+                    let report = await this._dataSourceAsync.InsertUserAsync(user);
                     r = report.user;
                     return resolve(r);
                 } catch (exception) {
@@ -105,15 +126,19 @@ export module LazyUAC {
          */
         public Authenticate(username: string, password: string, callback: (match: boolean, user: DataModel.User) => void): this {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserName(username, (user: DataModel.User): void => {
-                if (user) {
-                    user.ComparePassword(password, (match: boolean): void => {
-                        return callback(match, user);
-                    });
-                } else {
-                    return callback(false, null);
-                }
-            });
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserName(username, (user: DataModel.User): void => {
+                    if (user) {
+                        user.ComparePassword(password, (match: boolean): void => {
+                            return callback(match, user);
+                        });
+                    } else {
+                        return callback(false, null);
+                    }
+                });
+            } else {
+                Log.e("UAC", "Authenticate", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -127,7 +152,7 @@ export module LazyUAC {
             return new Promise<{match: boolean, user: DataModel.User}>(async(resolve, reject)=> {
                 let r: {match: boolean, user: DataModel.User} = {match: false, user: null};
                 try {
-                    let user = await this._dataSource.GetUserByUserNameAsync(username);
+                    let user = await this._dataSourceAsync.GetUserByUserNameAsync(username);
                     r.user = user;
                     if (user) {
                         user.ComparePassword(password, (match: boolean): void => {
@@ -151,7 +176,11 @@ export module LazyUAC {
          */
         public DeleteUser(userId: string, callback: (deleted: boolean) => void): this {
             this._ValidateDataSource();
-            this._dataSource.DeleteUser(userId, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.DeleteUser(userId, callback);
+            } else {
+                Log.e("UAC", "DeleteUser", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -164,7 +193,7 @@ export module LazyUAC {
             return new Promise<boolean>(async(resolve, reject)=> {
                 let r: boolean = false;
                 try {
-                    r = await this._dataSource.DeleteUserAsync(userId);
+                    r = await this._dataSourceAsync.DeleteUserAsync(userId);
                     return resolve(r);
                 } catch (exception) {
                     return reject(exception)
@@ -180,7 +209,11 @@ export module LazyUAC {
          */
         public GetUserByUserName(username: string, callback: (user: DataModel.User) => void): this {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserName(username, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserName(username, callback);
+            } else {
+                Log.e("UAC", "GetUserByUserName", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -193,7 +226,7 @@ export module LazyUAC {
             return new Promise<DataModel.User>(async(resolve, reject)=> {
                 let r: DataModel.User = null;
                 try {
-                    r = await this._dataSource.GetUserByUserNameAsync(username);
+                    r = await this._dataSourceAsync.GetUserByUserNameAsync(username);
                     return resolve(r);
                 } catch (exception) {
                     return reject(exception)
@@ -209,7 +242,11 @@ export module LazyUAC {
          */
         public GetUserById(userId: string, callback: (user: DataModel.User) => void): this {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserId(userId, callback);
+            } else {
+                Log.e("UAC", "GetUserById", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -222,7 +259,7 @@ export module LazyUAC {
             return new Promise<DataModel.User>(async(resolve, reject)=> {
                 let r: DataModel.User = null;
                 try {
-                    r = await this._dataSource.GetUserByUserIdAsync(userId);
+                    r = await this._dataSourceAsync.GetUserByUserIdAsync(userId);
                     return resolve(r);
                 } catch (exception) {
                     return reject(exception)
@@ -237,7 +274,11 @@ export module LazyUAC {
          */
         public GetAllUsers(callback: (list: DataModel.User[]) => void): this {
             this._ValidateDataSource();
-            this._dataSource.GetAllUsers(callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetAllUsers(callback);
+            } else {
+                Log.e("UAC", "GetAllUsers", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -245,7 +286,7 @@ export module LazyUAC {
             return new Promise<DataModel.User[]>(async(resolve, reject)=> {
                 let r: DataModel.User[] = null;
                 try {
-                    r = await this._dataSource.GetAllUsersAsync();
+                    r = await this._dataSourceAsync.GetAllUsersAsync();
                     return resolve(r);
                 } catch (exception) {
                     return reject(exception)
@@ -263,14 +304,18 @@ export module LazyUAC {
          */
         public AddRolesToUser(userId: string, role: DataModel.Role, callback: (valid: boolean)=>void): this {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void => {
-                if (user) {
-                    user.Roles |= role;
-                    this.UpdateUser(user, callback);
-                } else {
-                    return callback(false);
-                }
-            });
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void => {
+                    if (user) {
+                        user.Roles |= role;
+                        this.UpdateUser(user, callback);
+                    } else {
+                        return callback(false);
+                    }
+                });
+            } else {
+                Log.e("UAC", "AddRolesToUser", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -285,7 +330,7 @@ export module LazyUAC {
             return new Promise<boolean>(async(resolve, reject)=> {
                 let r: boolean = false;
                 try {
-                    let user = await this._dataSource.GetUserByUserIdAsync(userId);
+                    let user = await this._dataSourceAsync.GetUserByUserIdAsync(userId);
                     if (user) {
                         user.Roles |= role;
                         r = await this.UpdateUserAsync(user);
@@ -306,15 +351,19 @@ export module LazyUAC {
          */
         public RemoveRolesToUser(userId: string, role: DataModel.Role, callback: (done: boolean)=>void): this {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void => {
-                if (user) {
-                    if (user.Roles >= role) {
-                        user.Roles -= role;
-                        this.UpdateUser(user, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void => {
+                    if (user) {
+                        if (user.Roles >= role) {
+                            user.Roles -= role;
+                            this.UpdateUser(user, callback);
+                        }
                     }
-                }
-                return callback(false);
-            });
+                    return callback(false);
+                });
+            } else {
+                Log.e("UAC", "RemoveRolesToUser", "non-Async method call with Async function");
+            }
             return this;
         }
 
@@ -328,7 +377,7 @@ export module LazyUAC {
             return new Promise<boolean>(async(resolve, reject)=> {
                 let r: boolean = false;
                 try {
-                    let user = await this._dataSource.GetUserByUserIdAsync(userId);
+                    let user = await this._dataSourceAsync.GetUserByUserIdAsync(userId);
                     if (user) {
                         if (user.Roles >= role) {
                             user.Roles -= role;
@@ -349,7 +398,11 @@ export module LazyUAC {
          */
         public UpdateUser(user: DataModel.User, callback: (done: boolean) => void): void {
             this._ValidateDataSource();
-            this._dataSource.UpdateUser(user, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.UpdateUser(user, callback);
+            } else {
+                Log.e("UAC", "UpdateUser", "non-Async method call with Async function");
+            }
         }
 
         /**
@@ -361,7 +414,7 @@ export module LazyUAC {
             return new Promise<boolean>(async(resolve, reject)=> {
                 let r: boolean = false;
                 try {
-                    let report = await this._dataSource.UpdateUserAsync(user);
+                    let report = await this._dataSourceAsync.UpdateUserAsync(user);
                     r = report.updated;
                     return resolve(r);
                 } catch (exception) {
@@ -375,7 +428,7 @@ export module LazyUAC {
          * @private
          */
         private _ValidateDataSource(): void {
-            if (!this._dataSource) {
+            if (!this._dataSource && !this._dataSourceAsync) {
                 let error = new DataService.DataSourceException("data source can't be null");
                 Log.c("UserManager", "ValidateDataSource", error);
                 throw error;

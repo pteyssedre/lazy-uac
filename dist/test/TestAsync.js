@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const chai = require("chai");
 const uac_1 = require('../src/uac');
 const models_1 = require('../src/model/models');
+const index_1 = require("lazy-format-logger/dist/index");
 var expect = chai.expect;
 function GetDefaultUser() {
     return new models_1.DataModel.User({
@@ -28,6 +29,13 @@ function GetDefaultUserWithPassword(password) {
     var user = GetDefaultUser();
     user.AddPasswordSync(password);
     return user;
+}
+function GenerateUac() {
+    var options = {
+        logLevel: index_1.LogLevel.INFO,
+        useAsync: true
+    };
+    return new uac_1.LazyUAC.UserManager(options);
 }
 describe('Module', function () {
     describe('DataModel', function () {
@@ -92,7 +100,7 @@ describe('Module', function () {
         describe('Default options test', function () {
             it('Should create UAC databases and connect to them', function () {
                 return __awaiter(this, void 0, void 0, function* () {
-                    uac = new uac_1.LazyUAC.UserManager();
+                    uac = GenerateUac();
                     expect(uac).to.not.equal(null);
                     let started = yield uac.StartManagerAsync();
                     expect(started).to.equal(true);

@@ -19,15 +19,26 @@ var LazyUAC;
             if (!this.options) {
                 this.options = {};
             }
-            this._dataSource = this.options.dataSource;
-            if (!this._dataSource) {
-                this._dataSource = new data_service_1.DataService.LazyDataServerAsync(this.options.dataSourceOptions);
+            if (this.options.logLevel) {
+                UserManager.setLevel(this.options.logLevel);
+            }
+            if (this.options.useAsync) {
+                this._dataSourceAsync = this.options.dataSourceAsync;
+                if (!this._dataSourceAsync) {
+                    this._dataSourceAsync = new data_service_1.DataService.LazyDataServerAsync(this.options.dataSourceOptions);
+                }
+            }
+            else {
+                this._dataSource = this.options.dataSource;
+                if (!this._dataSource && !this.options.useAsync) {
+                    this._dataSource = new data_service_1.DataService.LazyDataServer(this.options.dataSourceOptions);
+                }
             }
             this._ValidateDataSource();
         }
         static setLevel(level) {
             Log = new lazyFormatLogger.Logger(level);
-            data_service_1.DataService.LazyDataServer.setLevel(level);
+            data_service_1.DataService.LazyDataServerBase.setLevel(level);
         }
         /**
          * Starting the Manager to connect and initialized the databases, if needed.
@@ -35,9 +46,14 @@ var LazyUAC;
          * @return {LazyUAC.UserManager} current instance.
          */
         StartManager(callback) {
-            this._dataSource.Connect((error, result) => {
-                return callback(error, result);
-            });
+            if (!this.options.useAsync) {
+                this._dataSource.Connect((error, result) => {
+                    return callback(error, result);
+                });
+            }
+            else {
+                Log.e("UAC", "StartManager", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -46,11 +62,11 @@ var LazyUAC;
          * @constructor
          */
         StartManagerAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
-                        let result = yield this._dataSource.ConnectAsync();
+                        let result = yield this._dataSourceAsync.ConnectAsync();
                         r = !result.error;
                         return resolve(r);
                     }
@@ -68,10 +84,15 @@ var LazyUAC;
          */
         AddUser(user, callback) {
             this._ValidateDataSource();
-            user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
-            this._dataSource.InsertUser(user, (success) => {
-                callback(success ? user : null);
-            });
+            if (!this.options.useAsync) {
+                user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
+                this._dataSource.InsertUser(user, (success) => {
+                    callback(success ? user : null);
+                });
+            }
+            else {
+                Log.e("UAC", "AddUser", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -80,12 +101,12 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         AddUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
                         user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
-                        let report = yield this._dataSource.InsertUserAsync(user);
+                        let report = yield this._dataSourceAsync.InsertUserAsync(user);
                         r = report.user;
                         return resolve(r);
                     }
@@ -104,16 +125,21 @@ var LazyUAC;
          */
         Authenticate(username, password, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserName(username, (user) => {
-                if (user) {
-                    user.ComparePassword(password, (match) => {
-                        return callback(match, user);
-                    });
-                }
-                else {
-                    return callback(false, null);
-                }
-            });
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserName(username, (user) => {
+                    if (user) {
+                        user.ComparePassword(password, (match) => {
+                            return callback(match, user);
+                        });
+                    }
+                    else {
+                        return callback(false, null);
+                    }
+                });
+            }
+            else {
+                Log.e("UAC", "Authenticate", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -123,11 +149,11 @@ var LazyUAC;
          * @return {Promise<{match: boolean, user: DataModel.User}>}
          */
         AuthenticateAsync(username, password) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { match: false, user: null };
                     try {
-                        let user = yield this._dataSource.GetUserByUserNameAsync(username);
+                        let user = yield this._dataSourceAsync.GetUserByUserNameAsync(username);
                         r.user = user;
                         if (user) {
                             user.ComparePassword(password, (match) => {
@@ -153,7 +179,12 @@ var LazyUAC;
          */
         DeleteUser(userId, callback) {
             this._ValidateDataSource();
-            this._dataSource.DeleteUser(userId, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.DeleteUser(userId, callback);
+            }
+            else {
+                Log.e("UAC", "DeleteUser", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -162,11 +193,11 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         DeleteUserAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
-                        r = yield this._dataSource.DeleteUserAsync(userId);
+                        r = yield this._dataSourceAsync.DeleteUserAsync(userId);
                         return resolve(r);
                     }
                     catch (exception) {
@@ -183,7 +214,12 @@ var LazyUAC;
          */
         GetUserByUserName(username, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserName(username, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserName(username, callback);
+            }
+            else {
+                Log.e("UAC", "GetUserByUserName", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -192,11 +228,11 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         GetUserByUserNameAsync(username) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
-                        r = yield this._dataSource.GetUserByUserNameAsync(username);
+                        r = yield this._dataSourceAsync.GetUserByUserNameAsync(username);
                         return resolve(r);
                     }
                     catch (exception) {
@@ -213,7 +249,12 @@ var LazyUAC;
          */
         GetUserById(userId, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserId(userId, callback);
+            }
+            else {
+                Log.e("UAC", "GetUserById", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -222,11 +263,11 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         GetUserByIdAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
-                        r = yield this._dataSource.GetUserByUserIdAsync(userId);
+                        r = yield this._dataSourceAsync.GetUserByUserIdAsync(userId);
                         return resolve(r);
                     }
                     catch (exception) {
@@ -242,15 +283,20 @@ var LazyUAC;
          */
         GetAllUsers(callback) {
             this._ValidateDataSource();
-            this._dataSource.GetAllUsers(callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetAllUsers(callback);
+            }
+            else {
+                Log.e("UAC", "GetAllUsers", "non-Async method call with Async function");
+            }
             return this;
         }
         GetAllUsersAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
-                        r = yield this._dataSource.GetAllUsersAsync();
+                        r = yield this._dataSourceAsync.GetAllUsersAsync();
                         return resolve(r);
                     }
                     catch (exception) {
@@ -269,15 +315,20 @@ var LazyUAC;
          */
         AddRolesToUser(userId, role, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, (user) => {
-                if (user) {
-                    user.Roles |= role;
-                    this.UpdateUser(user, callback);
-                }
-                else {
-                    return callback(false);
-                }
-            });
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserId(userId, (user) => {
+                    if (user) {
+                        user.Roles |= role;
+                        this.UpdateUser(user, callback);
+                    }
+                    else {
+                        return callback(false);
+                    }
+                });
+            }
+            else {
+                Log.e("UAC", "AddRolesToUser", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -288,11 +339,11 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         AddRolesToUserAsync(userId, role) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
-                        let user = yield this._dataSource.GetUserByUserIdAsync(userId);
+                        let user = yield this._dataSourceAsync.GetUserByUserIdAsync(userId);
                         if (user) {
                             user.Roles |= role;
                             r = yield this.UpdateUserAsync(user);
@@ -314,15 +365,20 @@ var LazyUAC;
          */
         RemoveRolesToUser(userId, role, callback) {
             this._ValidateDataSource();
-            this._dataSource.GetUserByUserId(userId, (user) => {
-                if (user) {
-                    if (user.Roles >= role) {
-                        user.Roles -= role;
-                        this.UpdateUser(user, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.GetUserByUserId(userId, (user) => {
+                    if (user) {
+                        if (user.Roles >= role) {
+                            user.Roles -= role;
+                            this.UpdateUser(user, callback);
+                        }
                     }
-                }
-                return callback(false);
-            });
+                    return callback(false);
+                });
+            }
+            else {
+                Log.e("UAC", "RemoveRolesToUser", "non-Async method call with Async function");
+            }
             return this;
         }
         /**
@@ -332,11 +388,11 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         RemoveRolesToUserAsync(userId, role) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
-                        let user = yield this._dataSource.GetUserByUserIdAsync(userId);
+                        let user = yield this._dataSourceAsync.GetUserByUserIdAsync(userId);
                         if (user) {
                             if (user.Roles >= role) {
                                 user.Roles -= role;
@@ -358,7 +414,12 @@ var LazyUAC;
          */
         UpdateUser(user, callback) {
             this._ValidateDataSource();
-            this._dataSource.UpdateUser(user, callback);
+            if (!this.options.useAsync) {
+                this._dataSource.UpdateUser(user, callback);
+            }
+            else {
+                Log.e("UAC", "UpdateUser", "non-Async method call with Async function");
+            }
         }
         /**
          *
@@ -366,11 +427,11 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         UpdateUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
-                        let report = yield this._dataSource.UpdateUserAsync(user);
+                        let report = yield this._dataSourceAsync.UpdateUserAsync(user);
                         r = report.updated;
                         return resolve(r);
                     }
@@ -385,7 +446,7 @@ var LazyUAC;
          * @private
          */
         _ValidateDataSource() {
-            if (!this._dataSource) {
+            if (!this._dataSource && !this._dataSourceAsync) {
                 let error = new data_service_1.DataService.DataSourceException("data source can't be null");
                 Log.c("UserManager", "ValidateDataSource", error);
                 throw error;

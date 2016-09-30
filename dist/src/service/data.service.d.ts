@@ -2,18 +2,32 @@ import { lazyboyjs } from "lazyboyjs";
 import { DataModel } from "../model/models";
 import lazyFormatLogger = require("lazy-format-logger");
 export declare module DataService {
-    /**
-     * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
-     */
-    class LazyDataServer implements UacDBA {
+    class LazyDataServerBase {
         /**
          * In order to restrict log to a specific level the variable {@link Log}
          * is reset and the level is propagated to {@link DataModel} and {@link LazyBoy} classes.
          * @param level {@link LogLevel}
          */
         static setLevel(level: lazyFormatLogger.LogLevel): void;
-        protected LazyBoy: lazyboyjs.LazyBoy;
         protected Options: LazyDataSourceConfig;
+        constructor(options?: LazyDataSourceConfig);
+        /**
+         * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
+         * inside the object.
+         * @protected
+         */
+        protected _validateOptions(): void;
+        /**
+         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
+         * @private
+         */
+        private _injectLazyUacViews();
+    }
+    /**
+     * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
+     */
+    class LazyDataServer extends LazyDataServerBase implements UacDBA {
+        protected LazyBoy: lazyboyjs.LazyBoy;
         isReady: boolean;
         /**
          * @param options {@link LazyDataSourceConfig}
@@ -57,17 +71,6 @@ export declare module DataService {
          */
         DeleteUser(userId: string, callback: (success: boolean) => void): void;
         GetAllUsers(callback: (list: DataModel.User[]) => void): void;
-        /**
-         * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
-         * inside the object.
-         * @private
-         */
-        private _validateOptions();
-        /**
-         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
-         * @private
-         */
-        private _injectLazyUacViews();
         /**
          * Shorter to search entry by UserId or UserName if one of those properties exist in the {@code user}
          * @param user {@link DataModel.User}
@@ -122,7 +125,7 @@ export declare module DataService {
          */
         private _updateUserEntry(entry, callback);
     }
-    class LazyDataServerAsync extends LazyDataServer implements UacDdaAsync {
+    class LazyDataServerAsync extends LazyDataServerBase implements UacDdaAsync {
         private LazyBoyAsync;
         /**
          * @param options {@link LazyDataSourceConfig}
@@ -263,7 +266,7 @@ export declare module DataService {
         DeleteUser(userId: string, callback: (success: boolean) => void): void;
         GetAllUsers(callback: (list: DataModel.User[]) => void): void;
     }
-    interface UacDdaAsync extends UacDBA {
+    interface UacDdaAsync {
         ConnectAsync(): Promise<{
             error: DataSourceException;
             result: any;

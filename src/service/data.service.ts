@@ -6,10 +6,8 @@ export module DataService {
 
     let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
 
-    /**
-     * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
-     */
-    export class LazyDataServer implements UacDBA {
+
+    export class LazyDataServerBase {
 
         /**
          * In order to restrict log to a specific level the variable {@link Log}
@@ -22,8 +20,65 @@ export module DataService {
             lazyboyjs.setLevel(level);
         }
 
-        protected LazyBoy: lazyboyjs.LazyBoy;
         protected Options: LazyDataSourceConfig;
+
+        constructor(options?: LazyDataSourceConfig) {
+            this.Options = options;
+            this._validateOptions();
+
+        }
+
+        /**
+         * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
+         * inside the object.
+         * @protected
+         */
+        protected _validateOptions(): void {
+            if (!this.Options) {
+                this.Options = {};
+            }
+            if (!this.Options.credential_db) {
+                this.Options.credential_db = "auth";
+            }
+            if (!this.Options.profile_db) {
+                this.Options.profile_db = "profile";
+            }
+            if (!this.Options.LazyBoyOptions) {
+                this.Options.LazyBoyOptions = {
+                    prefix: "uac",
+                    autoConnect: true,
+                    views: {}
+                };
+            } else {
+                if (!this.Options.LazyBoyOptions.prefix) {
+                    this.Options.LazyBoyOptions.prefix = "uac";
+                }
+                if (!this.Options.LazyBoyOptions.autoConnect) {
+                    this.Options.LazyBoyOptions.autoConnect = true;
+                }
+            }
+            this._injectLazyUacViews();
+        }
+
+
+        /**
+         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
+         * @private
+         */
+        private _injectLazyUacViews(): void {
+            if (!this.Options.LazyBoyOptions.views) {
+                this.Options.LazyBoyOptions.views = {};
+            }
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.credential_db] = userViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.profile_db] = profileViews;
+        }
+    }
+    /**
+     * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
+     */
+    export class LazyDataServer extends LazyDataServerBase implements UacDBA {
+
+        protected LazyBoy: lazyboyjs.LazyBoy;
 
         public isReady: boolean = false;
 
@@ -31,8 +86,7 @@ export module DataService {
          * @param options {@link LazyDataSourceConfig}
          */
         constructor(options?: LazyDataSourceConfig) {
-            this.Options = options;
-            this._validateOptions();
+            super(options);
             this.LazyBoy = this.Options.LazyBoy;
             if (!this.LazyBoy) {
                 this.LazyBoy = new lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
@@ -163,50 +217,6 @@ export module DataService {
                 Log.d("LazyDataServer", "GetAllUsers", "LazyBoy.GetViewResult", data);
                 callback(data);
             });
-        }
-
-        /**
-         * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
-         * inside the object.
-         * @private
-         */
-        private _validateOptions(): void {
-            if (!this.Options) {
-                this.Options = {};
-            }
-            if (!this.Options.credential_db) {
-                this.Options.credential_db = "auth";
-            }
-            if (!this.Options.profile_db) {
-                this.Options.profile_db = "profile";
-            }
-            if (!this.Options.LazyBoyOptions) {
-                this.Options.LazyBoyOptions = {
-                    prefix: "uac",
-                    autoConnect: true,
-                    views: {}
-                };
-            } else {
-                if (!this.Options.LazyBoyOptions.prefix) {
-                    this.Options.LazyBoyOptions.prefix = "uac";
-                }
-                if (!this.Options.LazyBoyOptions.autoConnect) {
-                    this.Options.LazyBoyOptions.autoConnect = true;
-                }
-            }
-            this._injectLazyUacViews();
-        }
-
-        /**
-         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
-         * @private
-         */
-        private _injectLazyUacViews(): void {
-            if (!this.Options.LazyBoyOptions.views) {
-                this.Options.LazyBoyOptions.views = {};
-            }
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.credential_db] = userViews;
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.profile_db] = profileViews;
         }
 
         /**
@@ -393,7 +403,7 @@ export module DataService {
                 });
         }
     }
-    export class LazyDataServerAsync extends LazyDataServer implements UacDdaAsync {
+    export class LazyDataServerAsync extends LazyDataServerBase implements UacDdaAsync {
 
         private LazyBoyAsync: lazyboyjs.LazyBoyAsync;
 
@@ -402,12 +412,10 @@ export module DataService {
          */
         constructor(options?: LazyDataSourceConfig) {
             super(options);
-            if (!options || !options.LazyBoyAsync) {
-                Log.w("LazyDataServerAsync", "can't use LazyDataServerAsync without LazyBoyAsync");
-                Log.d("LazyDataServerAsync", "creating LazyBoyAsync instance");
+            this.LazyBoyAsync = this.Options.LazyBoyAsync;
+            if (!this.LazyBoyAsync) {
                 this.LazyBoyAsync = new lazyboyjs.LazyBoyAsync(this.Options.LazyBoyOptions);
             }
-            Log.e("LazyDataServerAsync", "No ASYNC methods will work");
         }
 
         async ConnectAsync(): Promise<{error: DataSourceException, result: any}> {
@@ -795,7 +803,6 @@ export module DataService {
             'profileByUserId': profileByUserId,
         }
     };
-
     export enum UserCodeException {
         NOT_FOUND = 1,
         ALREADY_EXIST = 1 << 1,
@@ -838,7 +845,7 @@ export module DataService {
         GetAllUsers(callback: (list: DataModel.User[]) => void): void;
     }
 
-    export interface UacDdaAsync extends UacDBA {
+    export interface UacDdaAsync {
 
         ConnectAsync(): Promise<{error: DataSourceException, result: any}>;
         GetUserByUserIdAsync(userId: string): Promise<DataModel.User>;

@@ -1,6 +1,7 @@
 import chai = require("chai");
 import {LazyUAC} from '../src/uac';
 import {DataModel} from '../src/model/models';
+import {LogLevel} from "lazy-format-logger/dist/index";
 
 var expect = chai.expect;
 
@@ -22,6 +23,13 @@ function GetDefaultUserWithPassword(password) {
     var user = GetDefaultUser();
     user.AddPasswordSync(password);
     return user;
+}
+function GenerateUac() {
+    var options = {
+        logLevel: LogLevel.INFO,
+        useAsync: true
+    };
+    return new LazyUAC.UserManager(options);
 }
 describe('Module', function () {
     describe('DataModel', function () {
@@ -87,7 +95,7 @@ describe('Module', function () {
 
         describe('Default options test', function () {
             it('Should create UAC databases and connect to them', async function () {
-                uac = new LazyUAC.UserManager();
+                uac = GenerateUac();
                 expect(uac).to.not.equal(null);
                 let started = await uac.StartManagerAsync();
                 expect(started).to.equal(true);

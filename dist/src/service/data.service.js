@@ -13,24 +13,10 @@ const lazyFormatLogger = require("lazy-format-logger");
 var DataService;
 (function (DataService) {
     let Log = new lazyFormatLogger.Logger();
-    /**
-     * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
-     */
-    class LazyDataServer {
-        /**
-         * @param options {@link LazyDataSourceConfig}
-         */
+    class LazyDataServerBase {
         constructor(options) {
-            this.isReady = false;
             this.Options = options;
             this._validateOptions();
-            this.LazyBoy = this.Options.LazyBoy;
-            if (!this.LazyBoy) {
-                this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
-            }
-            else {
-                this.Options.LazyBoyOptions = this.LazyBoy.options;
-            }
         }
         /**
          * In order to restrict log to a specific level the variable {@link Log}
@@ -41,6 +27,69 @@ var DataService;
             Log = new lazyFormatLogger.Logger(level);
             models_1.DataModel.Utils.setLevel(level);
             lazyboyjs_1.lazyboyjs.setLevel(level);
+        }
+        /**
+         * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
+         * inside the object.
+         * @protected
+         */
+        _validateOptions() {
+            if (!this.Options) {
+                this.Options = {};
+            }
+            if (!this.Options.credential_db) {
+                this.Options.credential_db = "auth";
+            }
+            if (!this.Options.profile_db) {
+                this.Options.profile_db = "profile";
+            }
+            if (!this.Options.LazyBoyOptions) {
+                this.Options.LazyBoyOptions = {
+                    prefix: "uac",
+                    autoConnect: true,
+                    views: {}
+                };
+            }
+            else {
+                if (!this.Options.LazyBoyOptions.prefix) {
+                    this.Options.LazyBoyOptions.prefix = "uac";
+                }
+                if (!this.Options.LazyBoyOptions.autoConnect) {
+                    this.Options.LazyBoyOptions.autoConnect = true;
+                }
+            }
+            this._injectLazyUacViews();
+        }
+        /**
+         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
+         * @private
+         */
+        _injectLazyUacViews() {
+            if (!this.Options.LazyBoyOptions.views) {
+                this.Options.LazyBoyOptions.views = {};
+            }
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.credential_db] = userViews;
+            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.profile_db] = profileViews;
+        }
+    }
+    DataService.LazyDataServerBase = LazyDataServerBase;
+    /**
+     * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
+     */
+    class LazyDataServer extends LazyDataServerBase {
+        /**
+         * @param options {@link LazyDataSourceConfig}
+         */
+        constructor(options) {
+            super(options);
+            this.isReady = false;
+            this.LazyBoy = this.Options.LazyBoy;
+            if (!this.LazyBoy) {
+                this.LazyBoy = new lazyboyjs_1.lazyboyjs.LazyBoy(this.Options.LazyBoyOptions);
+            }
+            else {
+                this.Options.LazyBoyOptions = this.LazyBoy.options;
+            }
         }
         /**
          * By calling the Connect function, two databases will be added to the {@link LazyBoy} instance and initialized.
@@ -164,49 +213,6 @@ var DataService;
                 Log.d("LazyDataServer", "GetAllUsers", "LazyBoy.GetViewResult", data);
                 callback(data);
             });
-        }
-        /**
-         * Validation of the {@link Options} object, the defaults value will be enforce is they are not present
-         * inside the object.
-         * @private
-         */
-        _validateOptions() {
-            if (!this.Options) {
-                this.Options = {};
-            }
-            if (!this.Options.credential_db) {
-                this.Options.credential_db = "auth";
-            }
-            if (!this.Options.profile_db) {
-                this.Options.profile_db = "profile";
-            }
-            if (!this.Options.LazyBoyOptions) {
-                this.Options.LazyBoyOptions = {
-                    prefix: "uac",
-                    autoConnect: true,
-                    views: {}
-                };
-            }
-            else {
-                if (!this.Options.LazyBoyOptions.prefix) {
-                    this.Options.LazyBoyOptions.prefix = "uac";
-                }
-                if (!this.Options.LazyBoyOptions.autoConnect) {
-                    this.Options.LazyBoyOptions.autoConnect = true;
-                }
-            }
-            this._injectLazyUacViews();
-        }
-        /**
-         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
-         * @private
-         */
-        _injectLazyUacViews() {
-            if (!this.Options.LazyBoyOptions.views) {
-                this.Options.LazyBoyOptions.views = {};
-            }
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.credential_db] = userViews;
-            this.Options.LazyBoyOptions.views[this.Options.LazyBoyOptions.prefix + "_" + this.Options.profile_db] = profileViews;
         }
         /**
          * Shorter to search entry by UserId or UserName if one of those properties exist in the {@code user}
@@ -386,21 +392,19 @@ var DataService;
         }
     }
     DataService.LazyDataServer = LazyDataServer;
-    class LazyDataServerAsync extends LazyDataServer {
+    class LazyDataServerAsync extends LazyDataServerBase {
         /**
          * @param options {@link LazyDataSourceConfig}
          */
         constructor(options) {
             super(options);
-            if (!options || !options.LazyBoyAsync) {
-                Log.w("LazyDataServerAsync", "can't use LazyDataServerAsync without LazyBoyAsync");
-                Log.d("LazyDataServerAsync", "creating LazyBoyAsync instance");
+            this.LazyBoyAsync = this.Options.LazyBoyAsync;
+            if (!this.LazyBoyAsync) {
                 this.LazyBoyAsync = new lazyboyjs_1.lazyboyjs.LazyBoyAsync(this.Options.LazyBoyOptions);
             }
-            Log.e("LazyDataServerAsync", "No ASYNC methods will work");
         }
         ConnectAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { error: null, result: null };
                     try {
@@ -426,7 +430,7 @@ var DataService;
          * @return {Promise<DataModel.User>}
          */
         GetUserByUserIdAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let r = yield this._getEntryByUserIdAsync(userId);
@@ -445,7 +449,7 @@ var DataService;
          * @return {Promise<DataModel.User>}
          */
         GetUserByUserNameAsync(username) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let r = yield this._getEntryByUserNameAsync(username);
@@ -463,7 +467,7 @@ var DataService;
          * @return {Promise<{added:boolean, user: DataModel.User}>}
          */
         InsertUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { added: false, user: null };
                     try {
@@ -487,7 +491,7 @@ var DataService;
          * @return {Promise<{updated:boolean, user:DataModel.User}>}
          */
         UpdateUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { updated: false, user: null };
                     try {
@@ -512,7 +516,7 @@ var DataService;
          * @return {Promise<boolean>}
          */
         DeleteUserAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -535,7 +539,7 @@ var DataService;
          * @constructor
          */
         GetAllUsersAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = [];
                     try {
@@ -567,7 +571,7 @@ var DataService;
          * @private
          */
         _userExistAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     if (user) {
@@ -603,7 +607,7 @@ var DataService;
          * @private
          */
         _getUserEntryAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -633,7 +637,7 @@ var DataService;
          * @private
          */
         _addUserEntryAsync(data) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { success: false, entry: null };
                     try {
@@ -678,7 +682,7 @@ var DataService;
          * @private
          */
         _getEntryByUserIdAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     let report = yield this.LazyBoyAsync.GetViewResultAsync(this.Options.credential_db, "entryByUserId", {
@@ -714,7 +718,7 @@ var DataService;
          * @private
          */
         _getEntryByUserNameAsync(username) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let report = yield this.LazyBoyAsync.GetViewResultAsync(this.Options.credential_db, "entryByEmail", { key: username, reduce: false });
@@ -744,7 +748,7 @@ var DataService;
          * @private
          */
         _updateUserEntryAsync(entry) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let report = yield this.LazyBoyAsync.UpdateEntryAsync(this.Options.credential_db, entry);

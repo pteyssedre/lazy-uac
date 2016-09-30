@@ -2,6 +2,7 @@ var chai = require("chai");
 var expect = chai.expect;
 var LazyUAC = require('../dist/src/uac').LazyUAC;
 var DataModel = require('../dist/src/model/models').DataModel;
+var logF = require('lazy-format-logger');
 
 function GetDefaultUser() {
     return new DataModel.User({
@@ -17,6 +18,13 @@ function GetDefaultUserWithPassword(password) {
     var user = GetDefaultUser();
     user.AddPasswordSync(password);
     return user;
+}
+function GenerateUac() {
+    var options = {
+        logLevel: logF.LogLevel.INFO,
+        useAsync: false
+    };
+    return new LazyUAC.UserManager(options);
 }
 describe('Module', function () {
     describe('DataModel', function () {
@@ -76,7 +84,7 @@ describe('Module', function () {
 
         describe('Default options test', function () {
             it('Should create UAC databases and connect to them', function (done) {
-                uac = new LazyUAC.UserManager();
+                uac = GenerateUac();
                 expect(uac).to.not.equal(null);
                 uac.StartManager(function (error, result) {
                     expect(error).to.equal(null);
