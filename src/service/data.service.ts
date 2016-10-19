@@ -60,7 +60,6 @@ export module DataService {
             this._injectLazyUacViews();
         }
 
-
         /**
          * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
          * @private
@@ -403,6 +402,9 @@ export module DataService {
                 });
         }
     }
+    /**
+     * @classdesc Data source using Async/Await to ensure the use of {@link Promise} toward the library.
+     */
     export class LazyDataServerAsync extends LazyDataServerBase implements UacDdaAsync {
 
         private LazyBoyAsync: lazyboyjs.LazyBoyAsync;
@@ -418,6 +420,11 @@ export module DataService {
             }
         }
 
+        /**
+         * In order to establish connection with all the require databases, this method should be call before
+         * any data manipulation.
+         * @return {Promise<{error: DataSourceException, result: any}>}
+         */
         async ConnectAsync(): Promise<{error: DataSourceException, result: any}> {
             return new Promise<{error: DataSourceException, result: any}>(async(resolve, reject)=> {
                 let r: {error: DataSourceException, result: any} = {error: null, result: null};
@@ -587,12 +594,12 @@ export module DataService {
                         return resolve(r);
                     } else {
                         let error = new DataSourceException("invalid data");
-                        Log.c("LazyDataServer", "userExist", error);
+                        Log.c("LazyDataServer", "userExistAsync", error);
                         throw error;
                     }
                 } else {
                     let error = new DataSourceException("invalid data");
-                    Log.c("LazyDataServer", "userExist", error);
+                    Log.c("LazyDataServer", "userExistAsync", error);
                     throw error;
                 }
             });
@@ -640,21 +647,21 @@ export module DataService {
                         type: "user",
                         data: data
                     });
-                    Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", report.entry);
+                    Log.d("LazyDataServer", "addUserEntryAsync", "LazyBoyAsync.AddEntryAsync", report.entry);
                     switch (report.result) {
                         case lazyboyjs.InstanceCreateStatus.Created:
-                            Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "Instance Created");
+                            Log.d("LazyDataServer", "addUserEntryAsync", "LazyBoyAsync.AddEntryAsync", "Instance Created");
                             r.success = true;
                             r.entry = report.entry;
                             break;
                         case lazyboyjs.InstanceCreateStatus.Conflict:
-                            Log.d("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "Instance Conflict");
+                            Log.d("LazyDataServer", "addUserEntryAsync", "LazyBoyAsync.AddEntryAsync", "Instance Conflict");
 
                             r.success = false;
                             r.entry = report.entry;
                             break;
                         default:
-                            Log.c("LazyDataServer", "addUserEntry", "LazyBoy.AddEntry", "not managed code : " + report.result);
+                            Log.c("LazyDataServer", "addUserEntryAsync", "LazyBoyAsync.AddEntryAsync", "not managed code : " + report.result);
                             r.success = false;
                             r.entry = report.entry;
                             break;
@@ -684,18 +691,18 @@ export module DataService {
                     reduce: false
                 });
                 if (report.error) {
-                    Log.c("LazyDataServerAsync", "getEntryByUserIdAsync", "LazyBoy.GetViewResult", report.error);
+                    Log.c("LazyDataServerAsync", "getEntryByUserIdAsync", "LazyBoyAsync.GetViewResultAsync", report.error);
                     throw report.error;
                 }
                 if (report.result.length == 0) {
-                    Log.d("LazyDataServer", "getEntryByUserIdAsync", "LazyBoy.GetViewResult", "no entry found");
+                    Log.d("LazyDataServer", "getEntryByUserIdAsync", "LazyBoyAsync.GetViewResultAsync", "no entry found");
                     return resolve(r);
                 } else if (report.result.length > 1) {
                     //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
-                    Log.d("LazyDataServer", "getEntryByUserIdAsync", "LazyBoy.GetViewResult", "more than one entry was found");
+                    Log.d("LazyDataServer", "getEntryByUserIdAsync", "LazyBoyAsync.GetViewResultAsync", "more than one entry was found");
                     return resolve(r);
                 }
-                Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "one entry was found");
+                Log.d("LazyDataServer", "getEntryByUserIdAsync", "LazyBoyAsync.GetViewResultAsync", "one entry was found");
                 return resolve(r = report.result[0].value ? r : null);
             });
         }
@@ -717,14 +724,14 @@ export module DataService {
                         this.Options.credential_db, "entryByEmail", {key: username, reduce: false});
                     if (report.result.length == 0) {
                         // throw new DataSourceException("no user found", UserCodeException.NOT_FOUND);
-                        Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "no user found");
+                        Log.d("LazyDataServer", "getEntryByUserNameAsync", "LazyBoyAsync.GetViewResultAsync", "no user found");
                         return resolve(null);
                     } else if (report.result.length > 1) {
                         //throw new DataSourceException("more than one user was found", UserCodeException.DUPLICATE_FOUND);
-                        Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "more than one user was found");
+                        Log.d("LazyDataServer", "getEntryByUserNameAsync", "LazyBoyAsync.GetViewResultAsync", "more than one user was found");
                         return resolve(null);
                     }
-                    Log.d("LazyDataServer", "getEntryByUserId", "LazyBoy.GetViewResult", "one user was found");
+                    Log.d("LazyDataServer", "getEntryByUserNameAsync", "LazyBoyAsync.GetViewResultAsync", "one user was found");
                     return resolve(report.result[0].value);
                 } catch (exception) {
                     return reject(exception)
@@ -738,15 +745,12 @@ export module DataService {
          * @return {Promise<{error: Error, updated: boolean, data: lazyboyjs.LazyInstance}>}
          * @private
          */
-        private async _updateUserEntryAsync(entry: lazyboyjs.LazyInstance): Promise<{
-            error: Error;
-            updated: boolean;
-            data: lazyboyjs.LazyInstance; }> {
+        private async _updateUserEntryAsync(entry: lazyboyjs.LazyInstance): Promise<{error: Error, updated: boolean, data: lazyboyjs.LazyInstance }> {
             return new Promise<{error: Error; updated: boolean; data: lazyboyjs.LazyInstance;}>(
                 async(resolve, reject)=> {
                     try {
                         let report = await this.LazyBoyAsync.UpdateEntryAsync(this.Options.credential_db, entry);
-                        Log.d("LazyDataServer", "updateUserEntry", "LazyBoy.UpdateEntry", report.updated, report.data);
+                        Log.d("LazyDataServer", "updateUserEntryAsync", "LazyBoyAsync.UpdateEntryAsync", report.updated, report.data);
                         return resolve(report);
                     } catch (exception) {
                         return reject(exception)

@@ -125,12 +125,20 @@ export declare module DataService {
          */
         private _updateUserEntry(entry, callback);
     }
+    /**
+     * @classdesc Data source using Async/Await to ensure the use of {@link Promise} toward the library.
+     */
     class LazyDataServerAsync extends LazyDataServerBase implements UacDdaAsync {
         private LazyBoyAsync;
         /**
          * @param options {@link LazyDataSourceConfig}
          */
         constructor(options?: LazyDataSourceConfig);
+        /**
+         * In order to establish connection with all the require databases, this method should be call before
+         * any data manipulation.
+         * @return {Promise<{error: DataSourceException, result: any}>}
+         */
         ConnectAsync(): Promise<{
             error: DataSourceException;
             result: any;
