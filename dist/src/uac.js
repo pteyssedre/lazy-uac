@@ -62,7 +62,7 @@ var LazyUAC;
          * @constructor
          */
         StartManagerAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -101,7 +101,7 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         AddUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -149,7 +149,7 @@ var LazyUAC;
          * @return {Promise<{match: boolean, user: DataModel.User}>}
          */
         AuthenticateAsync(username, password) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { match: false, user: null };
                     try {
@@ -193,7 +193,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         DeleteUserAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -228,7 +228,7 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         GetUserByUserNameAsync(username) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -263,7 +263,7 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         GetUserByIdAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -292,7 +292,7 @@ var LazyUAC;
             return this;
         }
         GetAllUsersAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -339,7 +339,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         AddRolesToUserAsync(userId, role) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -388,7 +388,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         RemoveRolesToUserAsync(userId, role) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -427,7 +427,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         UpdateUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {

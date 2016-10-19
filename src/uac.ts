@@ -41,7 +41,7 @@ export module LazyUAC {
                 if (!this._dataSource && !this.options.useAsync) {
                     this._dataSource = new DataService.LazyDataServer(this.options.dataSourceOptions);
                 }
-            }
+            } 
             this._ValidateDataSource();
         }
 
