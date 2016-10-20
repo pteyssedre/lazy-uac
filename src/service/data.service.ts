@@ -703,7 +703,7 @@ export module DataService {
                     return resolve(r);
                 }
                 Log.d("LazyDataServer", "getEntryByUserIdAsync", "LazyBoyAsync.GetViewResultAsync", "one entry was found");
-                return resolve(r = report.result[0].value ? r : null);
+                return resolve(report.result[0].value);
             });
         }
 
