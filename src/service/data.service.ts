@@ -453,7 +453,7 @@ export module DataService {
             return new Promise<DataModel.User>(async(resolve, reject)=> {
                 try {
                     let r = await this._getEntryByUserIdAsync(userId);
-                    return resolve(new DataModel.User(r.instance));
+                    return resolve(new DataModel.User(r));
                 } catch (exception) {
                     return reject(exception)
                 }
