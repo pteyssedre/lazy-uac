@@ -412,7 +412,7 @@ var DataService;
          * @return {Promise<{error: DataSourceException, result: any}>}
          */
         ConnectAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { error: null, result: null };
                     try {
@@ -438,7 +438,7 @@ var DataService;
          * @return {Promise<DataModel.User>}
          */
         GetUserByUserIdAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let r = yield this._getEntryByUserIdAsync(userId);
@@ -457,7 +457,7 @@ var DataService;
          * @return {Promise<DataModel.User>}
          */
         GetUserByUserNameAsync(username) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let r = yield this._getEntryByUserNameAsync(username);
@@ -475,7 +475,7 @@ var DataService;
          * @return {Promise<{added:boolean, user: DataModel.User}>}
          */
         InsertUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { added: false, user: null };
                     try {
@@ -499,7 +499,7 @@ var DataService;
          * @return {Promise<{updated:boolean, user:DataModel.User}>}
          */
         UpdateUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { updated: false, user: null };
                     try {
@@ -524,7 +524,7 @@ var DataService;
          * @return {Promise<boolean>}
          */
         DeleteUserAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -547,7 +547,7 @@ var DataService;
          * @constructor
          */
         GetAllUsersAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = [];
                     try {
@@ -579,7 +579,7 @@ var DataService;
          * @private
          */
         _userExistAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     if (user) {
@@ -615,7 +615,7 @@ var DataService;
          * @private
          */
         _getUserEntryAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -645,7 +645,7 @@ var DataService;
          * @private
          */
         _addUserEntryAsync(data) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { success: false, entry: null };
                     try {
@@ -690,7 +690,7 @@ var DataService;
          * @private
          */
         _getEntryByUserIdAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     let report = yield this.LazyBoyAsync.GetViewResultAsync(this.Options.credential_db, "entryByUserId", {
@@ -726,7 +726,7 @@ var DataService;
          * @private
          */
         _getEntryByUserNameAsync(username) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let report = yield this.LazyBoyAsync.GetViewResultAsync(this.Options.credential_db, "entryByEmail", { key: username, reduce: false });
@@ -756,7 +756,7 @@ var DataService;
          * @private
          */
         _updateUserEntryAsync(entry) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         let report = yield this.LazyBoyAsync.UpdateEntryAsync(this.Options.credential_db, entry);

@@ -17,10 +17,11 @@ var DataModel;
     }
     DataModel.Utils = Utils;
     (function (Role) {
+        Role[Role["NONE"] = 0] = "NONE";
         Role[Role["VIEWER"] = 1] = "VIEWER";
-        Role[Role["USER"] = 2] = "USER";
-        Role[Role["ADMIN"] = 4] = "ADMIN";
-        Role[Role["SUPER_ADMIN"] = 8] = "SUPER_ADMIN";
+        Role[Role["USER"] = 4] = "USER";
+        Role[Role["ADMIN"] = 8] = "ADMIN";
+        Role[Role["SUPER_ADMIN"] = 16] = "SUPER_ADMIN";
     })(DataModel.Role || (DataModel.Role = {}));
     var Role = DataModel.Role;
     class User {
@@ -87,6 +88,15 @@ var DataModel;
             }
             Log.d("User", "ComparePasswordSync", "comparing", password, this.Password);
             return bcript.compareSync(password, this.Password);
+        }
+        Any(role) {
+            return !!(this.Roles & role);
+        }
+        Has(role) {
+            return ((+this.Roles & +role) === +role);
+        }
+        Equal(role) {
+            return (+this.Roles === +role);
         }
         cryptingProgress() {
             //Log.d("", "in progress");

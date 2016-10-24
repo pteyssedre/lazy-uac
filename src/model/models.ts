@@ -7,33 +7,34 @@ export module DataModel {
     let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
 
     export class Utils {
-        public static newGuid(): string {
+        static newGuid(): string {
             return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
                 let r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
         }
 
-        public static setLevel(level: lazyFormatLogger.LogLevel): void {
+        static setLevel(level: lazyFormatLogger.LogLevel): void {
             Log = new lazyFormatLogger.Logger(level);
         }
     }
 
     export enum Role {
-        VIEWER = 1,
-        USER = 1 << 1,
-        ADMIN = 1 << 2,
-        SUPER_ADMIN = 1 << 3
+        NONE = 0,
+        VIEWER = 1 << 0,
+        USER = 1 << 2,
+        ADMIN = 1 << 3,
+        SUPER_ADMIN = 1 << 4
     }
 
     export class User {
 
-        public Id: string;
-        public FirstName: string;
-        public LastName: string;
-        public Email: string;
-        public Password: string;
-        public Roles: Role;
+        Id: string;
+        FirstName: string;
+        LastName: string;
+        Email: string;
+        Password: string;
+        Roles: Role;
 
         constructor(entry?: lazyboyjs.LazyInstance) {
             if (entry && entry.instance) {
@@ -45,7 +46,7 @@ export module DataModel {
             }
         }
 
-        public AddPassword(password: string, callback: ()=>void): void {
+        AddPassword(password: string, callback: ()=>void): void {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
@@ -70,7 +71,7 @@ export module DataModel {
             });
         }
 
-        public AddPasswordSync(password: string): void {
+        AddPasswordSync(password: string): void {
             if (password) {
                 let it = this;
                 let round = (Math.floor(Math.random() * 10) + 1);
@@ -83,7 +84,7 @@ export module DataModel {
             }
         }
 
-        public ComparePassword(password: string, callback: (match: boolean)=>void): void {
+        ComparePassword(password: string, callback: (match: boolean)=>void): void {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
@@ -96,7 +97,7 @@ export module DataModel {
             });
         }
 
-        public ComparePasswordSync(password: string): boolean {
+        ComparePasswordSync(password: string): boolean {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
@@ -104,6 +105,17 @@ export module DataModel {
             return bcript.compareSync(password, this.Password);
         }
 
+        Any(role: Role): boolean {
+            return !!(this.Roles & role);
+        }
+
+        Has(role: Role): boolean {
+            return ((+this.Roles & +role) === +role);
+        }
+
+        Equal(role: Role): boolean {
+            return (+this.Roles === +role);
+        }
 
         private cryptingProgress(): void {
             //Log.d("", "in progress");
@@ -111,11 +123,11 @@ export module DataModel {
     }
 
     export class Profile {
-        public UserId: string;
-        public Description: string;
-        public Avatar: string;
-        public PublicKey: string;
-        public PrivateKey: string;
+        UserId: string;
+        Description: string;
+        Avatar: string;
+        PublicKey: string;
+        PrivateKey: string;
 
         constructor(entry: lazyboyjs.LazyInstance) {
             let e = entry.instance;

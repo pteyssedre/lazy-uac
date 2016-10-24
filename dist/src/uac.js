@@ -62,7 +62,7 @@ var LazyUAC;
          * @constructor
          */
         StartManagerAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -96,17 +96,57 @@ var LazyUAC;
             return this;
         }
         /**
+         * Shorter to add user and enforce admin right to it.
+         * @param user {@link DataModel.User} user to save as Admin User
+         * @param callback {function(user: DataModel.User)} callback when operation is completed.
+         * @return {LazyUAC.UserManager}
+         */
+        AddAdmin(user, callback) {
+            this._ValidateDataSource();
+            if (!this.options.useAsync) {
+                user.Roles |= models_1.DataModel.Role.ADMIN | models_1.DataModel.Role.USER;
+                this._dataSource.InsertUser(user, (success) => {
+                    callback(success ? user : null);
+                });
+            }
+            else {
+                Log.e("UAC", "AddUser", "non-Async method call with Async function");
+            }
+            return this;
+        }
+        /**
          * In order to add a user to the system, we add VIEWER and USER role to the user.
          * @param user {DataModel.User}
          * @return {Promise<DataModel.User>}
          */
         AddUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
                         user.Roles |= models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER;
                         let report = yield this._dataSourceAsync.InsertUserAsync(user);
+                        r = report.user;
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
+        /**
+         * Shorter Async to add user and enforce admin right to it.
+         * @param user {DataModel.User} User to insert in the db.
+         * @return {Promise<DataModel.User>} resutl of the operation.
+         */
+        AddAdminAsync(user) {
+            return __awaiter(this, void 0, Promise, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = user;
+                    try {
+                        r.Roles |= models_1.DataModel.Role.ADMIN | models_1.DataModel.Role.USER;
+                        let report = yield this._dataSourceAsync.InsertUserAsync(r);
                         r = report.user;
                         return resolve(r);
                     }
@@ -149,7 +189,7 @@ var LazyUAC;
          * @return {Promise<{match: boolean, user: DataModel.User}>}
          */
         AuthenticateAsync(username, password) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = { match: false, user: null };
                     try {
@@ -193,7 +233,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         DeleteUserAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -228,7 +268,7 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         GetUserByUserNameAsync(username) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -263,7 +303,7 @@ var LazyUAC;
          * @return {Promise<DataModel.User>}
          */
         GetUserByIdAsync(userId) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -292,7 +332,7 @@ var LazyUAC;
             return this;
         }
         GetAllUsersAsync() {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = null;
                     try {
@@ -339,7 +379,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         AddRolesToUserAsync(userId, role) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -368,12 +408,12 @@ var LazyUAC;
             if (!this.options.useAsync) {
                 this._dataSource.GetUserByUserId(userId, (user) => {
                     if (user) {
-                        if (user.Roles >= role) {
-                            user.Roles -= role;
-                            this.UpdateUser(user, callback);
-                        }
+                        user.Roles &= ~(role);
+                        this.UpdateUser(user, callback);
                     }
-                    return callback(false);
+                    else {
+                        return callback(false);
+                    }
                 });
             }
             else {
@@ -388,7 +428,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         RemoveRolesToUserAsync(userId, role) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {
@@ -427,7 +467,7 @@ var LazyUAC;
          * @return {Promise<boolean>}
          */
         UpdateUserAsync(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+            return __awaiter(this, void 0, Promise, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     let r = false;
                     try {

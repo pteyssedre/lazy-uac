@@ -9,7 +9,7 @@ function GetDefaultUser() {
         instance: {
             Id: "1235567", FirstName: "Pierre",
             LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
-            Role: DataModel.Role.VIEWER | DataModel.Role.USER
+            Role: DataModel.Role.VIEWER
         }
     });
 }
@@ -115,13 +115,51 @@ describe('Module', function () {
                 });
             });
             it('Should return all users non deleted in database ', function (done) {
-                uac.GetAllUsers(function (data) {
+                uac.AddAdmin(new DataModel.User({instance: {Id:"9876", FirstName: "1", LastName: "1", Email:"1@1.com"}}), function (u1) {
+                    expect(u1).to.not.equal(null);
+                    uac.GetAllUsers(function (data) {
+                        console.log(data.length);
+                        expect(data.length).to.equal(2);
+                        uac.DeleteUser(u1.Id, function(complete){
+                            expect(complete).to.equal(true);
+                            done();
+                        });
+                    });
+                });
+            });
+            it('Should get user and add role to it', function (done) {
+                uac.AddRolesToUser(mockUser.Id, DataModel.Role.ADMIN, function (success) {
+                    expect(success).to.equal(true);
+                    uac.GetUserById(mockUser.Id, function (user) {
+                        expect(user).to.not.equal(null);
+                        expect(user.Has(DataModel.Role.ADMIN)).to.equal(true);
+                        done();
+                    });
+                });
+            });
+            it('Should validate that user has mask of Role', function (done) {
+                var mask = DataModel.Role.ADMIN | DataModel.Role.SUPER_ADMIN;
+                uac.GetUserById(mockUser.Id, function (user) {
+                    expect(user).to.not.equal(null);
+                    expect(user.Any(mask)).to.equal(true);
                     done();
                 });
             });
-            it('Should authenticated the user and return a object', function (done) {
+            it('Should remove role to user', function (done) {
+                uac.RemoveRolesToUser(mockUser.Id, DataModel.Role.ADMIN, function (success) {
+                    expect(success).to.equal(true);
+                    done()
+                });
+            });
+            it('Should validate the should not have role', function (done) {
+                uac.GetUserById(mockUser.Id, function (user) {
+                    expect(user).to.not.equal(null);
+                    expect(user.Has(DataModel.Role.ADMIN)).to.equal(false);
+                    done();
+                });
+            });
+            it('Should delete the user', function (done) {
                 uac.DeleteUser(mockUser.Id, function (deleted) {
-                    //noinspection JSUnresolvedVariable
                     expect(deleted).to.equal(true);
                     done();
                 });

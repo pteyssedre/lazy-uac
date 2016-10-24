@@ -4,6 +4,7 @@ import lazyFormatLogger = require("lazy-format-logger");
 
 export module LazyUAC {
 
+    import Utils = DataModel.Utils;
     let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
 
     export interface UacOptions {
@@ -41,7 +42,7 @@ export module LazyUAC {
                 if (!this._dataSource && !this.options.useAsync) {
                     this._dataSource = new DataService.LazyDataServer(this.options.dataSourceOptions);
                 }
-            } 
+            }
             this._ValidateDataSource();
         }
 
@@ -99,6 +100,25 @@ export module LazyUAC {
         }
 
         /**
+         * Shorter to add user and enforce admin right to it.
+         * @param user {@link DataModel.User} user to save as Admin User
+         * @param callback {function(user: DataModel.User)} callback when operation is completed.
+         * @return {LazyUAC.UserManager}
+         */
+        AddAdmin(user: DataModel.User, callback: (user: DataModel.User)=>void): this {
+            this._ValidateDataSource();
+            if (!this.options.useAsync) {
+                user.Roles |= DataModel.Role.ADMIN | DataModel.Role.USER;
+                this._dataSource.InsertUser(user, (success: boolean): void => {
+                    callback(success ? user : null);
+                });
+            } else {
+                Log.e("UAC", "AddUser", "non-Async method call with Async function");
+            }
+            return this;
+        }
+
+        /**
          * In order to add a user to the system, we add VIEWER and USER role to the user.
          * @param user {DataModel.User}
          * @return {Promise<DataModel.User>}
@@ -109,6 +129,25 @@ export module LazyUAC {
                 try {
                     user.Roles |= DataModel.Role.VIEWER | DataModel.Role.USER;
                     let report = await this._dataSourceAsync.InsertUserAsync(user);
+                    r = report.user;
+                    return resolve(r);
+                } catch (exception) {
+                    return reject(exception)
+                }
+            });
+        }
+
+        /**
+         * Shorter Async to add user and enforce admin right to it.
+         * @param user {DataModel.User} User to insert in the db.
+         * @return {Promise<DataModel.User>} resutl of the operation.
+         */
+        async AddAdminAsync(user: DataModel.User): Promise<DataModel.User> {
+            return new Promise<DataModel.User>(async(resolve, reject)=> {
+                let r: DataModel.User = user;
+                try {
+                    r.Roles |= DataModel.Role.ADMIN | DataModel.Role.USER;
+                    let report = await this._dataSourceAsync.InsertUserAsync(r);
                     r = report.user;
                     return resolve(r);
                 } catch (exception) {
@@ -354,12 +393,11 @@ export module LazyUAC {
             if (!this.options.useAsync) {
                 this._dataSource.GetUserByUserId(userId, (user: DataModel.User): void => {
                     if (user) {
-                        if (user.Roles >= role) {
-                            user.Roles -= role;
-                            this.UpdateUser(user, callback);
-                        }
+                        user.Roles &= ~(role);
+                        this.UpdateUser(user, callback);
+                    } else {
+                        return callback(false);
                     }
-                    return callback(false);
                 });
             } else {
                 Log.e("UAC", "RemoveRolesToUser", "non-Async method call with Async function");

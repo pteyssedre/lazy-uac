@@ -6,10 +6,11 @@ export declare module DataModel {
         static setLevel(level: lazyFormatLogger.LogLevel): void;
     }
     enum Role {
+        NONE = 0,
         VIEWER = 1,
-        USER = 2,
-        ADMIN = 4,
-        SUPER_ADMIN = 8,
+        USER = 4,
+        ADMIN = 8,
+        SUPER_ADMIN = 16,
     }
     class User {
         Id: string;
@@ -23,6 +24,9 @@ export declare module DataModel {
         AddPasswordSync(password: string): void;
         ComparePassword(password: string, callback: (match: boolean) => void): void;
         ComparePasswordSync(password: string): boolean;
+        Any(role: Role): boolean;
+        Has(role: Role): boolean;
+        Equal(role: Role): boolean;
         private cryptingProgress();
     }
     class Profile {

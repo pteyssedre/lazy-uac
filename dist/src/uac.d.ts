@@ -35,11 +35,24 @@ export declare module LazyUAC {
          */
         AddUser(user: DataModel.User, callback: (user: DataModel.User) => void): this;
         /**
+         * Shorter to add user and enforce admin right to it.
+         * @param user {@link DataModel.User} user to save as Admin User
+         * @param callback {function(user: DataModel.User)} callback when operation is completed.
+         * @return {LazyUAC.UserManager}
+         */
+        AddAdmin(user: DataModel.User, callback: (user: DataModel.User) => void): this;
+        /**
          * In order to add a user to the system, we add VIEWER and USER role to the user.
          * @param user {DataModel.User}
          * @return {Promise<DataModel.User>}
          */
         AddUserAsync(user: DataModel.User): Promise<DataModel.User>;
+        /**
+         * Shorter Async to add user and enforce admin right to it.
+         * @param user {DataModel.User} User to insert in the db.
+         * @return {Promise<DataModel.User>} resutl of the operation.
+         */
+        AddAdminAsync(user: DataModel.User): Promise<DataModel.User>;
         /**
          * To produce the access string for an User, the identity of the User as to be validated.
          * @param username {string} email address to retrieve the User inside the db.
