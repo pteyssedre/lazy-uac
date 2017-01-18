@@ -11,7 +11,7 @@ const chai = require("chai");
 const uac_1 = require('../src/uac');
 const models_1 = require('../src/model/models');
 const index_1 = require("lazy-format-logger/dist/index");
-var expect = chai.expect;
+let expect = chai.expect;
 function GetDefaultUser() {
     return new models_1.DataModel.User({
         instance: {
@@ -26,12 +26,12 @@ function GetDefaultUser() {
     });
 }
 function GetDefaultUserWithPassword(password) {
-    var user = GetDefaultUser();
+    let user = GetDefaultUser();
     user.AddPasswordSync(password);
     return user;
 }
 function GenerateUac() {
-    var options = {
+    let options = {
         logLevel: index_1.LogLevel.INFO,
         useAsync: true
     };
@@ -41,7 +41,7 @@ describe('Module', function () {
     describe('DataModel', function () {
         describe('UserModel test', function () {
             it('Should create an User and encrypt a Password in async mode', function (done) {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPassword("chiendechasse", function () {
                     expect(user.Password).to.not.equal("chiendechasse");
                     expect(user.ComparePasswordSync("chiendechasse")).to.equal(true);
@@ -49,13 +49,13 @@ describe('Module', function () {
                 });
             });
             it('Should create an User and encrypt a Password in sync mode', function () {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 expect(user.Password).to.not.equal("chiendechasse");
                 expect(user.ComparePasswordSync("chiendechasse")).to.equal(true);
             });
             it('Should return true on password compare in async mode', function () {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPassword("chiendechasse", function () {
                     expect(user.Password).to.not.equal("chiendechasse");
                     user.ComparePassword("chiendechasse", function (match) {
@@ -64,15 +64,15 @@ describe('Module', function () {
                 });
             });
             it('Should return true on password compare in sync mode', function () {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 expect(user.Password).to.not.equal("chiendechasse");
-                var match = user.ComparePasswordSync("chiendechasse");
+                let match = user.ComparePasswordSync("chiendechasse");
                 expect(match).to.equal(true);
             });
             it('Should create two user using the same password but the hash should not be equal', function () {
-                var user = GetDefaultUser();
-                var user2 = GetDefaultUser();
+                let user = GetDefaultUser();
+                let user2 = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 user2.AddPasswordSync("chiendechasse");
                 expect(user.Password).to.not.equal(user2.Password);
@@ -80,8 +80,8 @@ describe('Module', function () {
         });
         describe('ProfileModel test', function () {
             it('Should create a profile', function () {
-                var user = GetDefaultUser();
-                var profile = new models_1.DataModel.Profile({
+                let user = GetDefaultUser();
+                let profile = new models_1.DataModel.Profile({
                     instance: { UserId: user.Id },
                     created: null,
                     modified: null,
@@ -94,9 +94,9 @@ describe('Module', function () {
         });
     });
     describe('lazyUACAsync', function () {
-        var mockPassword = "Reacts987";
-        var mockUser = GetDefaultUserWithPassword(mockPassword);
-        var uac;
+        let mockPassword = "Reacts987";
+        let mockUser = GetDefaultUserWithPassword(mockPassword);
+        let uac;
         describe('Default options test', function () {
             it('Should create UAC databases and connect to them', function () {
                 return __awaiter(this, void 0, void 0, function* () {
