@@ -132,7 +132,19 @@ describe('Module', function () {
                     expect(success).to.equal(true);
                     uac.GetUserById(mockUser.Id, function (user) {
                         expect(user).to.not.equal(null);
-                        expect(user.Has(DataModel.Role.ADMIN)).to.equal(true);
+                        expect(user.HasRole(DataModel.Role.ADMIN)).to.equal(true);
+                        done();
+                    });
+                });
+            });
+            it('Should get user and modify role without saving', function(done){
+                uac.GetUserById(mockUser.Id, function (user) {
+                    expect(user).to.not.equal(null);
+                    expect(user.HasRole(DataModel.Role.ADMIN)).to.equal(true);
+                    user.RemoveRole(DataModel.Role.ADMIN);
+                    expect(user.HasRole(DataModel.Role.ADMIN)).to.equal(false);
+                    uac.GetUserById(mockUser.Id, function (u) {
+                        expect(u.HasRole(DataModel.Role.ADMIN)).to.equal(true);
                         done();
                     });
                 });
@@ -154,7 +166,7 @@ describe('Module', function () {
             it('Should validate the should not have role', function (done) {
                 uac.GetUserById(mockUser.Id, function (user) {
                     expect(user).to.not.equal(null);
-                    expect(user.Has(DataModel.Role.ADMIN)).to.equal(false);
+                    expect(user.HasRole(DataModel.Role.ADMIN)).to.equal(false);
                     done();
                 });
             });

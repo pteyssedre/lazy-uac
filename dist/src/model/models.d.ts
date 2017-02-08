@@ -2,7 +2,6 @@ import { lazyboyjs } from "lazyboyjs";
 import lazyFormatLogger = require("lazy-format-logger");
 export declare module DataModel {
     class Utils {
-        static newGuid(): string;
         static setLevel(level: lazyFormatLogger.LogLevel): void;
     }
     enum Role {
@@ -25,9 +24,10 @@ export declare module DataModel {
         ComparePassword(password: string, callback: (match: boolean) => void): void;
         ComparePasswordSync(password: string): boolean;
         Any(role: Role): boolean;
-        Has(role: Role): boolean;
-        Equal(role: Role): boolean;
-        private cryptingProgress();
+        HasRole(role: Role): boolean;
+        AddRole(role: Role): void;
+        RemoveRole(role: Role): void;
+        private static encryptingProgress();
     }
     class Profile {
         UserId: string;

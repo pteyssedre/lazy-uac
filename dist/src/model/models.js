@@ -5,12 +5,6 @@ var DataModel;
 (function (DataModel) {
     let Log = new lazyFormatLogger.Logger();
     class Utils {
-        static newGuid() {
-            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-                let r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
         static setLevel(level) {
             Log = new lazyFormatLogger.Logger(level);
         }
@@ -47,7 +41,7 @@ var DataModel;
                     throw error;
                 }
                 Log.d("User", "Generating Hash", salt);
-                bcript.hash(password, salt, it.cryptingProgress, (error, hash) => {
+                bcript.hash(password, salt, DataModel.User.encryptingProgress, (error, hash) => {
                     if (error) {
                         Log.c("User", "AddPassword", "bcript.hash", error);
                         throw error;
@@ -92,14 +86,17 @@ var DataModel;
         Any(role) {
             return !!(this.Roles & role);
         }
-        Has(role) {
-            return ((+this.Roles & +role) === +role);
+        HasRole(role) {
+            return ((this.Roles & role) === role);
         }
-        Equal(role) {
-            return (+this.Roles === +role);
+        AddRole(role) {
+            this.Roles |= role;
         }
-        cryptingProgress() {
-            //Log.d("", "in progress");
+        RemoveRole(role) {
+            this.Roles &= ~role;
+        }
+        static encryptingProgress() {
+            Log.d("User", "in progress");
         }
     }
     DataModel.User = User;

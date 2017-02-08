@@ -7,12 +7,6 @@ export module DataModel {
     let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
 
     export class Utils {
-        static newGuid(): string {
-            return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-                let r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
 
         static setLevel(level: lazyFormatLogger.LogLevel): void {
             Log = new lazyFormatLogger.Logger(level);
@@ -46,7 +40,7 @@ export module DataModel {
             }
         }
 
-        AddPassword(password: string, callback: ()=>void): void {
+        AddPassword(password: string, callback: () => void): void {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
@@ -59,7 +53,7 @@ export module DataModel {
                     throw error;
                 }
                 Log.d("User", "Generating Hash", salt);
-                bcript.hash(password, salt, it.cryptingProgress, (error: Error, hash: string): void => {
+                bcript.hash(password, salt, DataModel.User.encryptingProgress, (error: Error, hash: string): void => {
                     if (error) {
                         Log.c("User", "AddPassword", "bcript.hash", error);
                         throw error;
@@ -84,7 +78,7 @@ export module DataModel {
             }
         }
 
-        ComparePassword(password: string, callback: (match: boolean)=>void): void {
+        ComparePassword(password: string, callback: (match: boolean) => void): void {
             if (!password) {
                 throw new Error("password doesn't contain value");
             }
@@ -109,16 +103,20 @@ export module DataModel {
             return !!(this.Roles & role);
         }
 
-        Has(role: Role): boolean {
-            return ((+this.Roles & +role) === +role);
+        HasRole(role: Role): boolean {
+            return ((this.Roles & role) === role);
         }
 
-        Equal(role: Role): boolean {
-            return (+this.Roles === +role);
+        AddRole(role: Role): void {
+            this.Roles |= role;
         }
 
-        private cryptingProgress(): void {
-            //Log.d("", "in progress");
+        RemoveRole(role: Role): void {
+            this.Roles &= ~role;
+        }
+
+        private static encryptingProgress(): void {
+            Log.d("User", "in progress");
         }
     }
 

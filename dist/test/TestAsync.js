@@ -27,7 +27,10 @@ function GetDefaultUser() {
 }
 function GetDefaultUserWithPassword(password) {
     let user = GetDefaultUser();
+    user.FirstName = "Fake";
+    user.LastName = "User";
     user.AddPasswordSync(password);
+    user.Roles = models_1.DataModel.Role.USER;
     return user;
 }
 function GenerateUac() {
