@@ -1,4 +1,4 @@
-import { lazyboyjs } from "lazyboyjs";
+import lazyboyjs = require("lazyboyjs");
 import { DataModel } from "../model/models";
 import lazyFormatLogger = require("lazy-format-logger");
 export declare module DataService {
@@ -18,7 +18,7 @@ export declare module DataService {
          */
         protected _validateOptions(): void;
         /**
-         * Enforce the default require {@link lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
+         * Enforce the default require {@link lazyboyjs.lazyboyjs.LazyDesignViews} for {@link LazyUAC}.
          * @private
          */
         private _injectLazyUacViews();
@@ -27,7 +27,7 @@ export declare module DataService {
      * @classdesc Data source server use to CREATE, READ, UPDATE and DELETE, {@link DataModel.User} and {@link DataModel.Profile} instances.
      */
     class LazyDataServer extends LazyDataServerBase implements UacDBA {
-        protected LazyBoy: lazyboyjs.LazyBoy;
+        protected LazyBoy: lazyboyjs.lazyboyjs.LazyBoy;
         isReady: boolean;
         /**
          * @param options {@link LazyDataSourceConfig}
@@ -37,7 +37,7 @@ export declare module DataService {
          * By calling the Connect function, two databases will be added to the {@link LazyBoy} instance and initialized.
          * Since the LazyBoy instance can be external we may have more than 2 database.
          * So using array filtering we select the databases than contains the name of "credential_db"  and "profile_db"
-         * @param callback {function(error: DataSourceException, result: lazyboyjs.ReportInitialization): void}
+         * @param callback {function(error: DataSourceException, result: lazyboyjs.lazyboyjs.ReportInitialization): void}
          */
         Connect(callback: Callback): void;
         /**
@@ -65,7 +65,7 @@ export declare module DataService {
          */
         UpdateUser(user: DataModel.User, callback: (success: boolean) => void): void;
         /**
-         * Given the userId the {@link lazyboyjs.LazyInstance} will be flag as deleted.
+         * Given the userId the {@link lazyboyjs.lazyboyjs.LazyInstance} will be flag as deleted.
          * @param userId {string}
          * @param callback {function(success: boolean): void}
          */
@@ -79,10 +79,10 @@ export declare module DataService {
          */
         private _userExist(user, callback);
         /**
-         * Shorter to retrieve the entry {@link lazyboyjs.LazyInstance} from the database using either the
+         * Shorter to retrieve the entry {@link lazyboyjs.lazyboyjs.LazyInstance} from the database using either the
          * UserId or the UserName property of the parameter {@code user}
          * @param user
-         * @param callback {function(entry: lazyboyjs.LazyInstance)}
+         * @param callback {function(entry: lazyboyjs.lazyboyjs.LazyInstance)}
          * @throw DataSourceException if one of {@link DataModel.User} or {@link DataModel.User#Id} or {@link DataModel.User#Email} is null.
          */
         private _getUserEntry(user, callback);
@@ -102,7 +102,7 @@ export declare module DataService {
          *      Options.credential_db, "entryByUserId", {key: userId, reduce: false},
          * </pre>
          * @param userId {string}
-         * @param callback {function(entry: lazyboyjs.LazyInstance):void}
+         * @param callback {function(entry: lazyboyjs.lazyboyjs.LazyInstance):void}
          * @private
          */
         private _getEntryByUserId(userId, callback);
@@ -113,13 +113,13 @@ export declare module DataService {
          *      Options.credential_db, "entryByEmail", {key: username, reduce: false},
          * </pre>
          * @param username {string}
-         * @param callback {function(entry: lazyboyjs.LazyInstance):void}
+         * @param callback {function(entry: lazyboyjs.lazyboyjs.LazyInstance):void}
          * @private
          */
         private _getEntryByUserName(username, callback);
         /**
          * Shorter to execute {@link LazyDataServer.UpdateEntry} on the "credential_db".
-         * @param entry {lazyboyjs.LazyInstance}
+         * @param entry {lazyboyjs.lazyboyjs.LazyInstance}
          * @param callback {function(updated: boolean):void}
          * @private
          */
@@ -150,7 +150,7 @@ export declare module DataService {
          */
         GetUserByUserIdAsync(userId: string): Promise<DataModel.User>;
         /**
-         * Async shorter to retrieve a {@link DataModel.User} instance from the {@link lazyboyjs.LazyInstance}
+         * Async shorter to retrieve a {@link DataModel.User} instance from the {@link lazyboyjs.lazyboyjs.LazyInstance}
          * from the {@link LazyBoyAsync}
          * @param username
          * @return {Promise<DataModel.User>}
@@ -175,7 +175,7 @@ export declare module DataService {
             user: DataModel.User;
         }>;
         /**
-         * Given the userId the {@link lazyboyjs.LazyInstance} will be flag as deleted.
+         * Given the userId the {@link lazyboyjs.lazyboyjs.LazyInstance} will be flag as deleted.
          * @param userId {string}
          * @return {Promise<boolean>}
          */
@@ -195,10 +195,10 @@ export declare module DataService {
          */
         private _userExistAsync(user);
         /**
-         * Shorter to retrieve the entry {@link lazyboyjs.LazyInstance} from the database using either the
+         * Shorter to retrieve the entry {@link lazyboyjs.lazyboyjs.LazyInstance} from the database using either the
          * UserId or the UserName property of the parameter {@code user}
          * @param user {DataModel.User}
-         * @return {Promise<lazyboyjs.LazyInstance>}
+         * @return {Promise<lazyboyjs.lazyboyjs.LazyInstance>}
          * @private
          */
         private _getUserEntryAsync(user);
@@ -206,7 +206,7 @@ export declare module DataService {
          * Shorter to execute {@link AddEntry} on "credential_db". All conflict, update or delete
          * should be managed here.
          * @param data {object}
-         * @return {Promise<{success: boolean, entry: lazyboyjs.LazyInstance}>}
+         * @return {Promise<{success: boolean, entry: lazyboyjs.lazyboyjs.LazyInstance}>}
          * @private
          */
         private _addUserEntryAsync(data);
@@ -217,7 +217,7 @@ export declare module DataService {
          *      Options.credential_db, "entryByUserId", {key: userId, reduce: false},
          * </pre>
          * @param userId {string}
-         * @return {Promise<lazyboyjs.LazyInstance>}
+         * @return {Promise<lazyboyjs.lazyboyjs.LazyInstance>}
          * @private
          */
         private _getEntryByUserIdAsync(userId);
@@ -228,14 +228,14 @@ export declare module DataService {
          *      Options.credential_db, "entryByEmail", {key: username, reduce: false},
          * </pre>
          * @param username {string}
-         * @return {Promise<lazyboyjs.LazyInstance>}
+         * @return {Promise<lazyboyjs.lazyboyjs.LazyInstance>}
          * @private
          */
         private _getEntryByUserNameAsync(username);
         /**
          * Shorter to execute {@link LazyDataServer.UpdateEntry} on the "credential_db".
-         * @param entry {lazyboyjs.LazyInstance}
-         * @return {Promise<{error: Error, updated: boolean, data: lazyboyjs.LazyInstance}>}
+         * @param entry {lazyboyjs.lazyboyjs.LazyInstance}
+         * @return {Promise<{error: Error, updated: boolean, data: lazyboyjs.lazyboyjs.LazyInstance}>}
          * @private
          */
         private _updateUserEntryAsync(entry);
@@ -256,9 +256,9 @@ export declare module DataService {
     interface LazyDataSourceConfig {
         credential_db?: string;
         profile_db?: string;
-        LazyBoy?: lazyboyjs.LazyBoy;
-        LazyBoyAsync?: lazyboyjs.LazyBoyAsync;
-        LazyBoyOptions?: lazyboyjs.LazyOptions;
+        LazyBoy?: lazyboyjs.lazyboyjs.LazyBoy;
+        LazyBoyAsync?: lazyboyjs.lazyboyjs.LazyBoyAsync;
+        LazyBoyOptions?: lazyboyjs.lazyboyjs.LazyOptions;
     }
     /**
      *

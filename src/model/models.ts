@@ -1,5 +1,5 @@
 import * as bcript from "bcrypt-nodejs";
-import {lazyboyjs} from  "lazyboyjs";
+import lazyboyjs = require("lazyboyjs");
 import lazyFormatLogger = require("lazy-format-logger");
 
 export module DataModel {
@@ -30,7 +30,7 @@ export module DataModel {
         Password: string;
         Roles: Role;
 
-        constructor(entry?: lazyboyjs.LazyInstance) {
+        constructor(entry?: lazyboyjs.lazyboyjs.LazyInstance) {
             if (entry && entry.instance) {
                 let e = entry.instance;
                 let keys = Object.keys(e);
@@ -127,7 +127,7 @@ export module DataModel {
         PublicKey: string;
         PrivateKey: string;
 
-        constructor(entry: lazyboyjs.LazyInstance) {
+        constructor(entry: lazyboyjs.lazyboyjs.LazyInstance) {
             let e = entry.instance;
             this.UserId = e.UserId;
             this.Description = e.Description;
