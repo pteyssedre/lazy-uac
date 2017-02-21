@@ -10,14 +10,14 @@ var DataModel;
         }
     }
     DataModel.Utils = Utils;
+    var Role;
     (function (Role) {
         Role[Role["NONE"] = 0] = "NONE";
         Role[Role["VIEWER"] = 1] = "VIEWER";
         Role[Role["USER"] = 4] = "USER";
         Role[Role["ADMIN"] = 8] = "ADMIN";
         Role[Role["SUPER_ADMIN"] = 16] = "SUPER_ADMIN";
-    })(DataModel.Role || (DataModel.Role = {}));
-    var Role = DataModel.Role;
+    })(Role = DataModel.Role || (DataModel.Role = {}));
     class User {
         constructor(entry) {
             if (entry && entry.instance) {
