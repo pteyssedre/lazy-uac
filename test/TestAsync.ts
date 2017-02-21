@@ -29,7 +29,7 @@ function GetDefaultUserWithPassword(password) {
 }
 function GenerateUac() {
     let options = {
-        logLevel: LogLevel.INFO,
+        logLevel: LogLevel.VERBOSE,
         useAsync: true
     };
     return new LazyUAC.UserManager(options);

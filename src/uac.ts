@@ -1,6 +1,7 @@
 import {DataModel} from "./model/models";
 import {DataService} from "./service/data.service";
 import lazyFormatLogger = require("lazy-format-logger");
+import {LogLevel} from "lazy-format-logger";
 
 export module LazyUAC {
 
@@ -31,6 +32,12 @@ export module LazyUAC {
             }
             if (this.options.logLevel) {
                 UserManager.setLevel(this.options.logLevel);
+                DataModel.Utils.setLevel(this.options.logLevel);
+            }else{
+                this.options.logLevel = LogLevel.VERBOSE;
+            }
+            if(!this.options.dataSourceOptions){
+                this.options.dataSourceOptions = {LazyBoyOptions:{logLevel: this.options.logLevel}}
             }
             if (this.options.useAsync) {
                 this._dataSourceAsync = this.options.dataSourceAsync;

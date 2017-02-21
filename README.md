@@ -1,29 +1,38 @@
-# README #
+# LAZY-UAC #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+Base on [LazyBoyJs](https://github.com/pteyssedre/lazyboyjs) this library provide an User-Access-Control  layer.
+Easily add users with authentication and roles to quickly develop an application using CouchDB as database.
 
-### What is this repository for? ###
+### Install ###
+```
+npm install lazy-uac
+```
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+### Setup ###
 
-### How do I get set up? ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+* Without configuration
 
-### Contribution guidelines ###
+```typescript
+import  LazyUAC = require("lazy-uac");
 
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+let manager = new LazyUAC.UserManager()
+```
+the `UserManager` will use the default settings values
+```typescript
+{
+        logLevel: lazyFormatLogger.LogLevel.VERBOSE,
+        useAsync: false,
+        dataSource: new DataService.UacDBA(),
+        dataSourceAsync: null,
+        dataSourceOptions: {
+            credential_db: "auth",
+            profile_db: "profile",
+            LazyBoyOptions: {
+                prefix: "uac",
+                autoConnect: true,
+                views: {}
+            }
+        }
+    }
+```

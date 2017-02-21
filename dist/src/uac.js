@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const models_1 = require("./model/models");
 const data_service_1 = require("./service/data.service");
 const lazyFormatLogger = require("lazy-format-logger");
+const lazy_format_logger_1 = require("lazy-format-logger");
 var LazyUAC;
 (function (LazyUAC) {
     let Log = new lazyFormatLogger.Logger();
@@ -21,6 +22,13 @@ var LazyUAC;
             }
             if (this.options.logLevel) {
                 UserManager.setLevel(this.options.logLevel);
+                models_1.DataModel.Utils.setLevel(this.options.logLevel);
+            }
+            else {
+                this.options.logLevel = lazy_format_logger_1.LogLevel.VERBOSE;
+            }
+            if (!this.options.dataSourceOptions) {
+                this.options.dataSourceOptions = { LazyBoyOptions: { logLevel: this.options.logLevel } };
             }
             if (this.options.useAsync) {
                 this._dataSourceAsync = this.options.dataSourceAsync;

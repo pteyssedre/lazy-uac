@@ -21,7 +21,7 @@ function GetDefaultUserWithPassword(password) {
 }
 function GenerateUac() {
     var options = {
-        logLevel: logF.LogLevel.INFO,
+        logLevel: logF.LogLevel.VERBOSE,
         useAsync: false
     };
     return new LazyUAC.UserManager(options);
@@ -118,7 +118,6 @@ describe('Module', function () {
                 uac.AddAdmin(new DataModel.User({instance: {Id:"9876", FirstName: "1", LastName: "1", Email:"1@1.com"}}), function (u1) {
                     expect(u1).to.not.equal(null);
                     uac.GetAllUsers(function (data) {
-                        console.log(data.length);
                         expect(data.length).to.equal(2);
                         uac.DeleteUser(u1.Id, function(complete){
                             expect(complete).to.equal(true);
