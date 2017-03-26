@@ -1,26 +1,25 @@
-var chai = require("chai");
-var expect = chai.expect;
-var LazyUAC = require('../dist/src/uac').LazyUAC;
-var DataModel = require('../dist/src/model/models').DataModel;
-var logF = require('lazy-format-logger');
+import chai = require("chai");
+import {LazyUAC} from '../src/uac';
+import {DataModel} from '../src/model/models';
+import logF = require('lazy-format-logger');
+import {lazyboyjs} from "lazyboyjs";
+let expect = chai.expect;
 
 function GetDefaultUser() {
-    return new DataModel.User({
-        instance: {
-            Id: "1235567", FirstName: "Pierre",
-            LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
-            Role: DataModel.Role.VIEWER
-        }
-    });
+    return new DataModel.User(lazyboyjs.newEntry({
+        Id: "1235567", FirstName: "Pierre",
+        LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
+        Role: DataModel.Role.VIEWER
+    }));
 }
 
 function GetDefaultUserWithPassword(password) {
-    var user = GetDefaultUser();
+    let user = GetDefaultUser();
     user.AddPasswordSync(password);
     return user;
 }
 function GenerateUac() {
-    var options = {
+    let options = {
         logLevel: logF.LogLevel.VERBOSE,
         useAsync: false
     };
@@ -30,7 +29,7 @@ describe('Module', function () {
     describe('DataModel', function () {
         describe('UserModel test', function () {
             it('Should create an User and encrypt a Password in async mode', function (done) {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPassword("chiendechasse", function () {
                     expect(user.Password).to.not.equal("chiendechasse");
                     expect(user.ComparePasswordSync("chiendechasse")).to.equal(true);
@@ -38,13 +37,13 @@ describe('Module', function () {
                 });
             });
             it('Should create an User and encrypt a Password in sync mode', function () {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 expect(user.Password).to.not.equal("chiendechasse");
                 expect(user.ComparePasswordSync("chiendechasse")).to.equal(true);
             });
             it('Should return true on password compare in async mode', function () {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPassword("chiendechasse", function () {
                     expect(user.Password).to.not.equal("chiendechasse");
                     user.ComparePassword("chiendechasse", function (match) {
@@ -53,15 +52,15 @@ describe('Module', function () {
                 });
             });
             it('Should return true on password compare in sync mode', function () {
-                var user = GetDefaultUser();
+                let user = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 expect(user.Password).to.not.equal("chiendechasse");
-                var match = user.ComparePasswordSync("chiendechasse");
+                let match = user.ComparePasswordSync("chiendechasse");
                 expect(match).to.equal(true);
             });
             it('Should create two user using the same password but the hash should not be equal', function () {
-                var user = GetDefaultUser();
-                var user2 = GetDefaultUser();
+                let user = GetDefaultUser();
+                let user2 = GetDefaultUser();
                 user.AddPasswordSync("chiendechasse");
                 user2.AddPasswordSync("chiendechasse");
                 expect(user.Password).to.not.equal(user2.Password);
@@ -69,8 +68,8 @@ describe('Module', function () {
         });
         describe('ProfileModel test', function () {
             it('Should create a profile', function () {
-                var user = GetDefaultUser();
-                var profile = new DataModel.Profile({instance: {UserId: user.Id}});
+                let user = GetDefaultUser();
+                let profile = new DataModel.Profile(lazyboyjs.newEntry({UserId: user.Id}, "user"));
                 expect(profile).to.not.equal(null);
                 expect(profile.UserId).to.equal(user.Id);
             });
@@ -78,9 +77,9 @@ describe('Module', function () {
     });
     describe('lazyUAC', function () {
 
-        var mockPassword = "Reacts987";
-        var mockUser = GetDefaultUserWithPassword(mockPassword);
-        var uac;
+        let mockPassword = "Reacts987";
+        let mockUser = GetDefaultUserWithPassword(mockPassword);
+        let uac;
 
         describe('Default options test', function () {
             it('Should create UAC databases and connect to them', function (done) {
@@ -115,11 +114,16 @@ describe('Module', function () {
                 });
             });
             it('Should return all users non deleted in database ', function (done) {
-                uac.AddAdmin(new DataModel.User({instance: {Id:"9876", FirstName: "1", LastName: "1", Email:"1@1.com"}}), function (u1) {
+                uac.AddAdmin(new DataModel.User(lazyboyjs.newEntry({
+                    Id: new Date().getTime(),
+                    FirstName: "1",
+                    LastName: "1",
+                    Email: "1@1.com"
+                })), function (u1) {
                     expect(u1).to.not.equal(null);
                     uac.GetAllUsers(function (data) {
                         expect(data.length).to.equal(2);
-                        uac.DeleteUser(u1.Id, function(complete){
+                        uac.DeleteUser(u1.Id, function (complete) {
                             expect(complete).to.equal(true);
                             done();
                         });
@@ -136,7 +140,7 @@ describe('Module', function () {
                     });
                 });
             });
-            it('Should get user and modify role without saving', function(done){
+            it('Should get user and modify role without saving', function (done) {
                 uac.GetUserById(mockUser.Id, function (user) {
                     expect(user).to.not.equal(null);
                     expect(user.HasRole(DataModel.Role.ADMIN)).to.equal(true);
@@ -149,7 +153,7 @@ describe('Module', function () {
                 });
             });
             it('Should validate that user has mask of Role', function (done) {
-                var mask = DataModel.Role.ADMIN | DataModel.Role.SUPER_ADMIN;
+                let mask = DataModel.Role.ADMIN | DataModel.Role.SUPER_ADMIN;
                 uac.GetUserById(mockUser.Id, function (user) {
                     expect(user).to.not.equal(null);
                     expect(user.Any(mask)).to.equal(true);

@@ -7,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("./model/models");
 const data_service_1 = require("./service/data.service");
 const lazyFormatLogger = require("lazy-format-logger");
@@ -466,7 +467,7 @@ var LazyUAC;
                 this._dataSource.UpdateUser(user, callback);
             }
             else {
-                Log.e("UAC", "UpdateUser", "non-Async method call with Async function");
+                Log.c("UAC", "UpdateUser", "non-Async method call with Async function");
             }
         }
         /**
@@ -481,6 +482,29 @@ var LazyUAC;
                     try {
                         let report = yield this._dataSourceAsync.UpdateUserAsync(user);
                         r = report.updated;
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
+        AddAvatar(userId, path, callback) {
+            this._ValidateDataSource();
+            if (!this.options.useAsync) {
+                this._dataSource.AddAvatar(userId, path, callback);
+            }
+            else {
+                Log.c("UAC", "AddAvatar", "non-Async method call with Async function");
+            }
+        }
+        AddAvatarAsync(userId, path) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = false;
+                    try {
+                        r = yield this._dataSourceAsync.AddAvatarAsync(userId, path);
                         return resolve(r);
                     }
                     catch (exception) {

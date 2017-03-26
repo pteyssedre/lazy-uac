@@ -7,23 +7,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 const chai = require("chai");
 const uac_1 = require("../src/uac");
 const models_1 = require("../src/model/models");
 const index_1 = require("lazy-format-logger/dist/index");
+const lazyboyjs_1 = require("lazyboyjs");
 let expect = chai.expect;
 function GetDefaultUser() {
-    return new models_1.DataModel.User({
-        instance: {
-            Id: "1235567", FirstName: "Pierre",
-            LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
-            Roles: models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER
-        },
-        created: new Date().getTime(),
-        modified: new Date().getTime(),
-        isDeleted: false,
-        type: "user"
-    });
+    return new models_1.DataModel.User(lazyboyjs_1.lazyboyjs.newEntry({
+        Id: "1235567", FirstName: "Pierre",
+        LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
+        Roles: models_1.DataModel.Role.VIEWER | models_1.DataModel.Role.USER
+    }, "user"));
 }
 function GetDefaultUserWithPassword(password) {
     let user = GetDefaultUser();
@@ -137,6 +133,10 @@ describe('Module', function () {
                     expect(users).to.not.equal(null);
                 });
             });
+            it('Should add avatar to user', () => __awaiter(this, void 0, void 0, function* () {
+                let result = yield uac.AddAvatarAsync(mockUser.Id, "./test/avatar.jpg");
+                expect(result).to.equal(true);
+            }));
             it('Should delete the user and return a true', function () {
                 return __awaiter(this, void 0, void 0, function* () {
                     let deleted = yield uac.DeleteUserAsync(mockUser.Id);

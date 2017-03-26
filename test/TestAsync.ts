@@ -2,21 +2,16 @@ import chai = require("chai");
 import {LazyUAC} from '../src/uac';
 import {DataModel} from '../src/model/models';
 import {LogLevel} from "lazy-format-logger/dist/index";
+import {lazyboyjs} from "lazyboyjs";
 
 let expect = chai.expect;
 
 function GetDefaultUser() {
-    return new DataModel.User({
-        instance: {
-            Id: "1235567", FirstName: "Pierre",
-            LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
-            Roles: DataModel.Role.VIEWER | DataModel.Role.USER
-        },
-        created: new Date().getTime(),
-        modified: new Date().getTime(),
-        isDeleted: false,
-        type: "user"
-    });
+    return new DataModel.User(lazyboyjs.newEntry({
+        Id: "1235567", FirstName: "Pierre",
+        LastName: "Teyssedre", Email: "pierre@teyssedre.ca",
+        Roles: DataModel.Role.VIEWER | DataModel.Role.USER
+    }, "user"));
 }
 
 function GetDefaultUserWithPassword(password) {
@@ -122,6 +117,11 @@ describe('Module', function () {
             it('Should return all users non deleted in database ', async function () {
                 let users = await uac.GetAllUsersAsync();
                 expect(users).to.not.equal(null);
+            });
+            it('Should add avatar to user', async() => {
+                let result = await uac.AddAvatarAsync(mockUser.Id, "./test/avatar.jpg");
+                expect(result).to.equal(true);
+
             });
             it('Should delete the user and return a true', async function () {
                 let deleted = await uac.DeleteUserAsync(mockUser.Id);

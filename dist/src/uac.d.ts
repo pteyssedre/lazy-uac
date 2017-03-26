@@ -161,6 +161,8 @@ export declare module LazyUAC {
          * @return {Promise<boolean>}
          */
         UpdateUserAsync(user: DataModel.User): Promise<boolean>;
+        AddAvatar(userId: string, path: string, callback: (done: boolean) => void): void;
+        AddAvatarAsync(userId: string, path: string): Promise<boolean>;
         /**
          * Helper to validate the state of the {@link _dataSource} property.
          * @private

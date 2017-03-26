@@ -18,6 +18,7 @@
     "src/model/models.ts",
     "src/service/data.service.ts",
     "typings/index.d.ts",
+    "test/Test.ts",
     "test/TestAsync.ts"
   ]
 }

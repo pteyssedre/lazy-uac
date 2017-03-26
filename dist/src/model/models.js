@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const bcript = require("bcrypt-nodejs");
 const lazyFormatLogger = require("lazy-format-logger");
 var DataModel;
