@@ -13,6 +13,8 @@ const uac_1 = require("../src/uac");
 const models_1 = require("../src/model/models");
 const index_1 = require("lazy-format-logger/dist/index");
 const lazyboyjs_1 = require("lazyboyjs");
+const path = require("path");
+const fs = require("fs");
 let expect = chai.expect;
 function GetDefaultUser() {
     return new models_1.DataModel.User(lazyboyjs_1.lazyboyjs.newEntry({
@@ -136,6 +138,19 @@ describe('Module', function () {
             it('Should add avatar to user', () => __awaiter(this, void 0, void 0, function* () {
                 let result = yield uac.AddAvatarAsync(mockUser.Id, "./test/avatar.jpg");
                 expect(result).to.equal(true);
+            }));
+            it('Should retrieve the avatar of the user', () => __awaiter(this, void 0, void 0, function* () {
+                let avatar = yield uac.GetUserAvatarAsync(mockUser.Id);
+                let downloadPath = path.join(__dirname, avatar.name + "_" + mockUser.Id + "." + avatar.extension);
+                let sourcePath = path.join(__dirname, "avatar.jpg");
+                let write = fs.createWriteStream(downloadPath);
+                avatar.data.on('end', () => {
+                    let buff1 = fs.readFileSync(downloadPath);
+                    let buff2 = fs.readFileSync(sourcePath);
+                    let equals = buff1.toString() === buff2.toString();
+                    expect(equals).to.equal(true);
+                });
+                avatar.data.pipe(write);
             }));
             it('Should delete the user and return a true', function () {
                 return __awaiter(this, void 0, void 0, function* () {

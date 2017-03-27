@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = require("../model/models");
 const lazyFormatLogger = require("lazy-format-logger");
 const lazyboyjs_1 = require("lazyboyjs");
+const mime = require("mime");
 var DataService;
 (function (DataService) {
     let Log = new lazyFormatLogger.Logger();
@@ -595,17 +596,36 @@ var DataService;
                             data: { UserId: userId }
                         });
                         if (insert.error) {
-                            Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddEntryAsync", insert.error);
+                            Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddEntryAsync", insert.error.toString());
                             return resolve(false);
                         }
                         entry = insert.entry;
                     }
-                    let doc = yield this.LazyBoyAsync.AddFileAsAttachment(this.Options.profile_db, entry._id, entry._rev, "avatar", path);
+                    let doc = yield this.LazyBoyAsync.AddFileAsAttachmentAsync(this.Options.profile_db, entry._id, entry._rev, "avatar", path);
                     if (doc.error) {
-                        Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddFileAsAttachment", doc.error);
+                        Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddFileAsAttachment", doc.error.toString());
                         return resolve(false);
                     }
                     return resolve(true);
+                }));
+            });
+        }
+        GetUserAvatarAsync(userId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                    if (!userId) {
+                        return resolve(null);
+                    }
+                    let entry = yield this._getProfileEntryByUserId(userId);
+                    if (!entry) {
+                        return resolve(null);
+                    }
+                    let info = yield this.LazyBoyAsync.GetAttachmentInfoAsync(this.Options.profile_db, entry._id, "avatar");
+                    if (!info) {
+                        return resolve(null);
+                    }
+                    let stream = yield this.LazyBoyAsync.GetAttachmentAsync(this.Options.profile_db, entry._id, "avatar");
+                    return resolve({ name: 'avatar', extension: mime.extension(info.content_type), data: stream });
                 }));
             });
         }
@@ -810,7 +830,7 @@ var DataService;
         _getProfileEntryByUserId(userId) {
             return __awaiter(this, void 0, void 0, function* () {
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                    let view = yield this.LazyBoyAsync.GetViewResultAsync(this.Options.profile_db, "profileByUserId", {
+                    let view = yield this.LazyBoyAsync.GetViewResultAsync(this.Options.profile_db, "profileEntryByUserId", {
                         key: userId,
                         reduce: false
                     });
@@ -867,11 +887,16 @@ var DataService;
         map: "function(doc){ if(doc.instance.hasOwnProperty('UserId') && !doc.isDeleted){ emit(doc.instance.UserId, doc.instance); }}",
         reduce: "_count()"
     };
+    let profileEntryByUserId = {
+        map: "function(doc){ if(doc.instance.hasOwnProperty('UserId') && !doc.isDeleted){ emit(doc.instance.UserId, doc); }}",
+        reduce: "_count()"
+    };
     let profileViews = {
-        version: 1,
+        version: 2,
         type: 'javascript',
         views: {
             'profileByUserId': profileByUserId,
+            'profileEntryByUserId': profileEntryByUserId
         }
     };
     var UserCodeException;

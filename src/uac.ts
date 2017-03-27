@@ -6,6 +6,7 @@ import {LogLevel} from "lazy-format-logger";
 export module LazyUAC {
 
     import Utils = DataModel.Utils;
+    import ReadableStream = NodeJS.ReadableStream;
     let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
 
     export interface UacOptions {
@@ -482,6 +483,18 @@ export module LazyUAC {
                 let r: boolean = false;
                 try {
                     r = await this._dataSourceAsync.AddAvatarAsync(userId, path);
+                    return resolve(r);
+                } catch (exception) {
+                    return reject(exception)
+                }
+            });
+        }
+
+        async GetUserAvatarAsync(userId: string): Promise<{name: string, extension: string, data: ReadableStream}> {
+            return new Promise<{name: string, extension: string, data: ReadableStream}>(async(resolve, reject) => {
+                let r: {name: string, extension: string, data: ReadableStream} = {name: "", extension: "", data: null};
+                try {
+                    r = await this._dataSourceAsync.GetUserAvatarAsync(userId);
                     return resolve(r);
                 } catch (exception) {
                     return reject(exception)

@@ -1,9 +1,11 @@
 import {DataModel} from "../model/models";
 import lazyFormatLogger = require("lazy-format-logger");
 import {lazyboyjs} from "lazyboyjs";
+import mime = require('mime');
 
 export module DataService {
 
+    import ReadableStream = NodeJS.ReadableStream;
     let Log: lazyFormatLogger.Logger = new lazyFormatLogger.Logger();
 
 
@@ -596,17 +598,35 @@ export module DataService {
                         data: {UserId: userId}
                     });
                     if (insert.error) {
-                        Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddEntryAsync", insert.error);
+                        Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddEntryAsync", insert.error.toString());
                         return resolve(false);
                     }
                     entry = insert.entry;
                 }
-                let doc = await this.LazyBoyAsync.AddFileAsAttachment(this.Options.profile_db, entry._id, entry._rev, "avatar", path);
+                let doc = await this.LazyBoyAsync.AddFileAsAttachmentAsync(this.Options.profile_db, entry._id, entry._rev, "avatar", path);
                 if (doc.error) {
-                    Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddFileAsAttachment", doc.error);
+                    Log.e("LazyDataServerAsync", "AddAvatarAsync", "AddFileAsAttachment", doc.error.toString());
                     return resolve(false);
                 }
                 return resolve(true);
+            });
+        }
+
+        async GetUserAvatarAsync(userId: string): Promise<{name: string; extension: string; data: NodeJS.ReadableStream}> {
+            return new Promise<{name: string; extension: string; data: NodeJS.ReadableStream}>(async(resolve) => {
+                if (!userId) {
+                    return resolve(null);
+                }
+                let entry = await this._getProfileEntryByUserId(userId);
+                if (!entry) {
+                    return resolve(null);
+                }
+                let info = await this.LazyBoyAsync.GetAttachmentInfoAsync(this.Options.profile_db, entry._id, "avatar");
+                if (!info) {
+                    return resolve(null);
+                }
+                let stream = await this.LazyBoyAsync.GetAttachmentAsync(this.Options.profile_db, entry._id, "avatar");
+                return resolve({name: 'avatar', extension: mime.extension(info.content_type), data: stream});
             });
         }
 
@@ -800,7 +820,7 @@ export module DataService {
 
         private async _getProfileEntryByUserId(userId: string) {
             return new Promise<lazyboyjs.LazyInstance>(async(resolve, reject) => {
-                let view = await this.LazyBoyAsync.GetViewResultAsync(this.Options.profile_db, "profileByUserId", {
+                let view = await this.LazyBoyAsync.GetViewResultAsync(this.Options.profile_db, "profileEntryByUserId", {
                     key: userId,
                     reduce: false
                 });
@@ -857,11 +877,16 @@ export module DataService {
         map: "function(doc){ if(doc.instance.hasOwnProperty('UserId') && !doc.isDeleted){ emit(doc.instance.UserId, doc.instance); }}",
         reduce: "_count()"
     };
+    let profileEntryByUserId: lazyboyjs.LazyView = {
+        map: "function(doc){ if(doc.instance.hasOwnProperty('UserId') && !doc.isDeleted){ emit(doc.instance.UserId, doc); }}",
+        reduce: "_count()"
+    };
     let profileViews: lazyboyjs.LazyDesignViews = {
-        version: 1,
+        version: 2,
         type: 'javascript',
         views: {
             'profileByUserId': profileByUserId,
+            'profileEntryByUserId':profileEntryByUserId
         }
     };
     export enum UserCodeException {
@@ -921,6 +946,7 @@ export module DataService {
         DeleteUserAsync(userId: string): Promise<boolean>;
         GetAllUsersAsync(): Promise<DataModel.User[]>;
         AddAvatarAsync(userId: string, path: string): Promise<boolean>;
+        GetUserAvatarAsync(userId: string): Promise<{name: string, extension: string, data: ReadableStream}>;
     }
 
 }

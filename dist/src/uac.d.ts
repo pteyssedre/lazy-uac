@@ -2,6 +2,7 @@ import { DataModel } from "./model/models";
 import { DataService } from "./service/data.service";
 import lazyFormatLogger = require("lazy-format-logger");
 export declare module LazyUAC {
+    import ReadableStream = NodeJS.ReadableStream;
     interface UacOptions {
         logLevel?: lazyFormatLogger.LogLevel;
         useAsync?: boolean;
@@ -163,6 +164,11 @@ export declare module LazyUAC {
         UpdateUserAsync(user: DataModel.User): Promise<boolean>;
         AddAvatar(userId: string, path: string, callback: (done: boolean) => void): void;
         AddAvatarAsync(userId: string, path: string): Promise<boolean>;
+        GetUserAvatarAsync(userId: string): Promise<{
+            name: string;
+            extension: string;
+            data: ReadableStream;
+        }>;
         /**
          * Helper to validate the state of the {@link _dataSource} property.
          * @private

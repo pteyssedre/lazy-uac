@@ -2,6 +2,7 @@ import { DataModel } from "../model/models";
 import lazyFormatLogger = require("lazy-format-logger");
 import { lazyboyjs } from "lazyboyjs";
 export declare module DataService {
+    import ReadableStream = NodeJS.ReadableStream;
     class LazyDataServerBase {
         /**
          * In order to restrict log to a specific level the variable {@link Log}
@@ -188,6 +189,11 @@ export declare module DataService {
          */
         GetAllUsersAsync(): Promise<DataModel.User[]>;
         AddAvatarAsync(userId: string, path: string): Promise<boolean>;
+        GetUserAvatarAsync(userId: string): Promise<{
+            name: string;
+            extension: string;
+            data: NodeJS.ReadableStream;
+        }>;
         /**
          * Shorter to search entry by UserId or UserName if one of those properties exist in the {@code user}
          * @param user {@link DataModel.User}
@@ -296,5 +302,10 @@ export declare module DataService {
         DeleteUserAsync(userId: string): Promise<boolean>;
         GetAllUsersAsync(): Promise<DataModel.User[]>;
         AddAvatarAsync(userId: string, path: string): Promise<boolean>;
+        GetUserAvatarAsync(userId: string): Promise<{
+            name: string;
+            extension: string;
+            data: ReadableStream;
+        }>;
     }
 }
