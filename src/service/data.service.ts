@@ -452,6 +452,7 @@ export module DataService {
                     await boy.ConnectAsync();
                     return resolve(r);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "ConnectAsync", exception);
                     return reject(exception)
                 }
             });
@@ -468,6 +469,7 @@ export module DataService {
                     let r = await this._getEntryByUserIdAsync(userId);
                     return resolve(new DataModel.User(r));
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "GetUserByUserIdAsync", exception);
                     return reject(exception)
                 }
             });
@@ -485,6 +487,7 @@ export module DataService {
                     let r = await this._getEntryByUserNameAsync(username);
                     return resolve(r != null ? new DataModel.User(r) : null);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "GetUserByUserIdAsync", exception);
                     return reject(exception)
                 }
             });
@@ -507,6 +510,7 @@ export module DataService {
                     }
                     return resolve(r);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "InsertUserAsync", exception);
                     return reject(exception)
                 }
             });
@@ -530,6 +534,8 @@ export module DataService {
                     }
                     return resolve(r);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "UpdateUserAsync", exception);
+
                     return reject(exception)
                 }
             });
@@ -551,6 +557,7 @@ export module DataService {
                     }
                     return resolve(r);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "DeleteUserAsync", exception);
                     return reject(exception)
                 }
             });
@@ -581,6 +588,7 @@ export module DataService {
                     }
                     return resolve(r);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "GetAllUsersAsync", exception);
                     return reject(exception)
                 }
             });
@@ -684,6 +692,7 @@ export module DataService {
                     }
                     return resolve(r);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "_getUserEntryAsync", exception);
                     return reject(exception)
                 }
             });
@@ -725,6 +734,7 @@ export module DataService {
                     }
                     return resolve(r);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "_addUserEntryAsync", exception);
                     return reject(exception)
                 }
             });
@@ -791,6 +801,7 @@ export module DataService {
                     Log.d("LazyDataServer", "getEntryByUserNameAsync", "LazyBoyAsync.GetViewResultAsync", "one user was found");
                     return resolve(report.result[0].value);
                 } catch (exception) {
+                    Log.c("LazyDataServerAsync", "_getEntryByUserNameAsync", exception);
                     return reject(exception)
                 }
             });
@@ -813,6 +824,7 @@ export module DataService {
                         Log.d("LazyDataServer", "updateUserEntryAsync", "LazyBoyAsync.UpdateEntryAsync", report.updated, report.data);
                         return resolve(report);
                     } catch (exception) {
+                        Log.c("LazyDataServerAsync", "_updateUserEntryAsync", exception);
                         return reject(exception)
                     }
                 });

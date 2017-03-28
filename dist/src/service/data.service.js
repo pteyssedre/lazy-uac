@@ -439,6 +439,7 @@ var DataService;
                         return resolve(r);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "ConnectAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -457,6 +458,7 @@ var DataService;
                         return resolve(new models_1.DataModel.User(r));
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "GetUserByUserIdAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -476,6 +478,7 @@ var DataService;
                         return resolve(r != null ? new models_1.DataModel.User(r) : null);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "GetUserByUserIdAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -500,6 +503,7 @@ var DataService;
                         return resolve(r);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "InsertUserAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -525,6 +529,7 @@ var DataService;
                         return resolve(r);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "UpdateUserAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -548,6 +553,7 @@ var DataService;
                         return resolve(r);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "DeleteUserAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -578,6 +584,7 @@ var DataService;
                         return resolve(r);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "GetAllUsersAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -690,6 +697,7 @@ var DataService;
                         return resolve(r);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "_getUserEntryAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -732,6 +740,7 @@ var DataService;
                         return resolve(r);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "_addUserEntryAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -802,6 +811,7 @@ var DataService;
                         return resolve(report.result[0].value);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "_getEntryByUserNameAsync", exception);
                         return reject(exception);
                     }
                 }));
@@ -822,6 +832,7 @@ var DataService;
                         return resolve(report);
                     }
                     catch (exception) {
+                        Log.c("LazyDataServerAsync", "_updateUserEntryAsync", exception);
                         return reject(exception);
                     }
                 }));
