@@ -490,11 +490,23 @@ export module LazyUAC {
             });
         }
 
-        async GetUserAvatarAsync(userId: string): Promise<{name: string, extension: string, data: ReadableStream}> {
+        async GetUserAvatarAsync(userId: string): Promise<{name: string, extension: string, data: Buffer}> {
+            return new Promise<{name: string, extension: string, data: Buffer}>(async(resolve, reject) => {
+                let r: {name: string, extension: string, data: Buffer} = {name: "", extension: "", data: null};
+                try {
+                    r = await this._dataSourceAsync.GetUserAvatarAsync(userId);
+                    return resolve(r);
+                } catch (exception) {
+                    return reject(exception)
+                }
+            });
+        }
+
+        async GetUserAvatarStreamAsync(userId: string): Promise<{name: string, extension: string, data: ReadableStream}> {
             return new Promise<{name: string, extension: string, data: ReadableStream}>(async(resolve, reject) => {
                 let r: {name: string, extension: string, data: ReadableStream} = {name: "", extension: "", data: null};
                 try {
-                    r = await this._dataSourceAsync.GetUserAvatarAsync(userId);
+                    r = await this._dataSourceAsync.GetUserAvatarStreamAsync(userId);
                     return resolve(r);
                 } catch (exception) {
                     return reject(exception)

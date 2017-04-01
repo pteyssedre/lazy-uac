@@ -125,8 +125,8 @@ describe('Module', function () {
                 expect(result).to.equal(true);
 
             });
-            it('Should retrieve the avatar of the user', async() => {
-                let avatar = await uac.GetUserAvatarAsync(mockUser.Id);
+            it('Should retrieve the stream avatar of the user', async() => {
+                let avatar = await uac.GetUserAvatarStreamAsync(mockUser.Id);
                 let downloadPath = path.join(__dirname, avatar.name + "_" + mockUser.Id + "." + avatar.extension);
                 let sourcePath = path.join(__dirname, "avatar.jpg");
                 let write = fs.createWriteStream(downloadPath);
@@ -137,6 +137,19 @@ describe('Module', function () {
                     expect(equals).to.equal(true);
                 });
                 avatar.data.pipe(write);
+            });
+
+            it('Should retrieve the buffered avatar of the user', async() => {
+                let avatar = await uac.GetUserAvatarAsync(mockUser.Id);
+                let downloadPath = path.join(__dirname, avatar.name + "_" + mockUser.Id + "2." + avatar.extension);
+                let sourcePath = path.join(__dirname, "avatar.jpg");
+
+                fs.writeSync(fs.openSync(downloadPath,'w'), avatar.data, 0);
+
+                let buff1 = fs.readFileSync(downloadPath);
+                let buff2 = fs.readFileSync(sourcePath);
+                let equals = buff1.toString() === buff2.toString();
+                expect(equals).to.equal(true);
             });
             it('Should delete the user and return a true', async function () {
                 let deleted = await uac.DeleteUserAsync(mockUser.Id);

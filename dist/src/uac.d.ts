@@ -167,6 +167,11 @@ export declare module LazyUAC {
         GetUserAvatarAsync(userId: string): Promise<{
             name: string;
             extension: string;
+            data: Buffer;
+        }>;
+        GetUserAvatarStreamAsync(userId: string): Promise<{
+            name: string;
+            extension: string;
             data: ReadableStream;
         }>;
         /**

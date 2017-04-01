@@ -620,7 +620,30 @@ export module DataService {
             });
         }
 
-        async GetUserAvatarAsync(userId: string): Promise<{name: string; extension: string; data: NodeJS.ReadableStream}> {
+        async GetUserAvatarAsync(userId: string): Promise<{name: string; extension: string; data: Buffer}> {
+            return new Promise<{name: string; extension: string; data: Buffer}>(async(resolve) => {
+                if (!userId) {
+                    return resolve(null);
+                }
+                let entry = await this._getProfileEntryByUserId(userId);
+                if (!entry) {
+                    return resolve(null);
+                }
+                let info = await this.LazyBoyAsync.GetAttachmentInfoAsync(this.Options.profile_db, entry._id, "avatar");
+                if (!info) {
+                    return resolve(null);
+                }
+                let data = await this.LazyBoyAsync.GetAttachmentAsync(this.Options.profile_db, entry._id, "avatar");
+                return resolve({
+                    name: 'avatar',
+                    extension: mime.extension(info.content_type),
+                    data: new Buffer(data.body.buffer, 'utf-8')
+                });
+            });
+        }
+
+
+        async GetUserAvatarStreamAsync(userId: string): Promise<{name: string; extension: string; data: NodeJS.ReadableStream}> {
             return new Promise<{name: string; extension: string; data: NodeJS.ReadableStream}>(async(resolve) => {
                 if (!userId) {
                     return resolve(null);
@@ -633,7 +656,7 @@ export module DataService {
                 if (!info) {
                     return resolve(null);
                 }
-                let stream = await this.LazyBoyAsync.GetAttachmentAsync(this.Options.profile_db, entry._id, "avatar");
+                let stream = await this.LazyBoyAsync.GetAttachmentStreamAsync(this.Options.profile_db, entry._id, "avatar");
                 return resolve({name: 'avatar', extension: mime.extension(info.content_type), data: stream});
             });
         }
@@ -898,7 +921,7 @@ export module DataService {
         type: 'javascript',
         views: {
             'profileByUserId': profileByUserId,
-            'profileEntryByUserId':profileEntryByUserId
+            'profileEntryByUserId': profileEntryByUserId
         }
     };
     export enum UserCodeException {
@@ -958,7 +981,8 @@ export module DataService {
         DeleteUserAsync(userId: string): Promise<boolean>;
         GetAllUsersAsync(): Promise<DataModel.User[]>;
         AddAvatarAsync(userId: string, path: string): Promise<boolean>;
-        GetUserAvatarAsync(userId: string): Promise<{name: string, extension: string, data: ReadableStream}>;
+        GetUserAvatarStreamAsync(userId: string): Promise<{name: string, extension: string, data: ReadableStream}>;
+        GetUserAvatarAsync(userId: string): Promise<{name: string, extension: string, data: Buffer}>;
     }
 
 }

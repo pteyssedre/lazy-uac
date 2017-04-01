@@ -192,6 +192,11 @@ export declare module DataService {
         GetUserAvatarAsync(userId: string): Promise<{
             name: string;
             extension: string;
+            data: Buffer;
+        }>;
+        GetUserAvatarStreamAsync(userId: string): Promise<{
+            name: string;
+            extension: string;
             data: NodeJS.ReadableStream;
         }>;
         /**
@@ -302,10 +307,15 @@ export declare module DataService {
         DeleteUserAsync(userId: string): Promise<boolean>;
         GetAllUsersAsync(): Promise<DataModel.User[]>;
         AddAvatarAsync(userId: string, path: string): Promise<boolean>;
-        GetUserAvatarAsync(userId: string): Promise<{
+        GetUserAvatarStreamAsync(userId: string): Promise<{
             name: string;
             extension: string;
             data: ReadableStream;
+        }>;
+        GetUserAvatarAsync(userId: string): Promise<{
+            name: string;
+            extension: string;
+            data: Buffer;
         }>;
     }
 }

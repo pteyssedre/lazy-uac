@@ -631,7 +631,30 @@ var DataService;
                     if (!info) {
                         return resolve(null);
                     }
-                    let stream = yield this.LazyBoyAsync.GetAttachmentAsync(this.Options.profile_db, entry._id, "avatar");
+                    let data = yield this.LazyBoyAsync.GetAttachmentAsync(this.Options.profile_db, entry._id, "avatar");
+                    return resolve({
+                        name: 'avatar',
+                        extension: mime.extension(info.content_type),
+                        data: new Buffer(data.body.buffer, 'utf-8')
+                    });
+                }));
+            });
+        }
+        GetUserAvatarStreamAsync(userId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                    if (!userId) {
+                        return resolve(null);
+                    }
+                    let entry = yield this._getProfileEntryByUserId(userId);
+                    if (!entry) {
+                        return resolve(null);
+                    }
+                    let info = yield this.LazyBoyAsync.GetAttachmentInfoAsync(this.Options.profile_db, entry._id, "avatar");
+                    if (!info) {
+                        return resolve(null);
+                    }
+                    let stream = yield this.LazyBoyAsync.GetAttachmentStreamAsync(this.Options.profile_db, entry._id, "avatar");
                     return resolve({ name: 'avatar', extension: mime.extension(info.content_type), data: stream });
                 }));
             });

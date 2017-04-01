@@ -527,6 +527,20 @@ var LazyUAC;
                 }));
             });
         }
+        GetUserAvatarStreamAsync(userId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    let r = { name: "", extension: "", data: null };
+                    try {
+                        r = yield this._dataSourceAsync.GetUserAvatarStreamAsync(userId);
+                        return resolve(r);
+                    }
+                    catch (exception) {
+                        return reject(exception);
+                    }
+                }));
+            });
+        }
         /**
          * Helper to validate the state of the {@link _dataSource} property.
          * @private
