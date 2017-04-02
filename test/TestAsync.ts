@@ -5,6 +5,9 @@ import {LogLevel} from "lazy-format-logger/dist/index";
 import {lazyboyjs} from "lazyboyjs";
 import path = require('path');
 import fs = require('fs');
+import UacOptions = LazyUAC.UacOptions;
+import WritableStream = NodeJS.WritableStream;
+import ReadableStream = NodeJS.ReadableStream;
 
 let expect = chai.expect;
 
@@ -25,9 +28,10 @@ function GetDefaultUserWithPassword(password) {
     return user;
 }
 function GenerateUac() {
-    let options = {
+    let options: UacOptions = {
         logLevel: LogLevel.VERBOSE,
-        useAsync: true
+        useAsync: true,
+        dataSourceOptions: {LazyBoyOptions: {cache: false, forceSave: true, raw: false}}
     };
     return new LazyUAC.UserManager(options);
 }
@@ -130,7 +134,7 @@ describe('Module', function () {
                 let downloadPath = path.join(__dirname, avatar.name + "_" + mockUser.Id + "." + avatar.extension);
                 let sourcePath = path.join(__dirname, "avatar.jpg");
                 let write = fs.createWriteStream(downloadPath);
-                avatar.data.on('end',()=>{
+                avatar.data.on('end', () => {
                     let buff1 = fs.readFileSync(downloadPath);
                     let buff2 = fs.readFileSync(sourcePath);
                     let equals = buff1.toString() === buff2.toString();
@@ -144,12 +148,64 @@ describe('Module', function () {
                 let downloadPath = path.join(__dirname, avatar.name + "_" + mockUser.Id + "2." + avatar.extension);
                 let sourcePath = path.join(__dirname, "avatar.jpg");
 
-                fs.writeSync(fs.openSync(downloadPath,'w'), avatar.data, 0);
+                fs.writeSync(fs.openSync(downloadPath, 'w'), avatar.data, 0);
 
                 let buff1 = fs.readFileSync(downloadPath);
                 let buff2 = fs.readFileSync(sourcePath);
                 let equals = buff1.toString() === buff2.toString();
                 expect(equals).to.equal(true);
+            });
+
+            async function WriteFileAsync(read: ReadableStream, write: WritableStream): Promise<boolean> {
+                return new Promise<boolean>((resolve, reject) => {
+                    try {
+                        write.on('error', () => {
+                            return reject("error write");
+                        });
+                        write.on('end', () => {
+                            return resolve(true);
+                        });
+                        read.on('error', () => {
+                            return reject("error read");
+                        });
+                        read.on('end', () => {
+                            return resolve(true);
+                        });
+                        read.pipe(write);
+                    } catch (exception) {
+                        return reject(exception)
+                    }
+                });
+            }
+            it('Should update avatar of user', async()=>{
+
+                let avatar = await uac.GetUserAvatarStreamAsync(mockUser.Id);
+                let downloadPath1 = path.join(__dirname, avatar.name + "_" + mockUser.Id + "." + avatar.extension);
+                let sourcePath1 = path.join(__dirname, "avatar.jpg");
+                let write = fs.createWriteStream(downloadPath1);
+                await WriteFileAsync(avatar.data, write);
+
+                let buff1 = fs.readFileSync(downloadPath1);
+                let buff2 = fs.readFileSync(sourcePath1);
+                let equals1 = buff1.toString() === buff2.toString();
+
+                expect(equals1).to.equal(true);
+
+                let result = await uac.AddAvatarAsync(mockUser.Id, "./test/avatar-2.jpg");
+                expect(result).to.equal(true);
+
+
+                let avatar2 = await uac.GetUserAvatarStreamAsync(mockUser.Id);
+                let downloadPath2 = path.join(__dirname, avatar.name + "_" + mockUser.Id + "." + avatar.extension);
+                let sourcePath2 = path.join(__dirname, "avatar-2.jpg");
+                let write2 = fs.createWriteStream(downloadPath1);
+                await WriteFileAsync(avatar2.data, write2);
+
+                let buff3 = fs.readFileSync(downloadPath2);
+                let buff4 = fs.readFileSync(sourcePath2);
+                let equals2 = buff3.toString() === buff4.toString();
+
+                expect(equals2).to.equal(true);
             });
             it('Should delete the user and return a true', async function () {
                 let deleted = await uac.DeleteUserAsync(mockUser.Id);

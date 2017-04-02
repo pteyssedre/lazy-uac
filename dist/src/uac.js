@@ -29,7 +29,7 @@ var LazyUAC;
                 this.options.logLevel = lazy_format_logger_1.LogLevel.VERBOSE;
             }
             if (!this.options.dataSourceOptions) {
-                this.options.dataSourceOptions = { LazyBoyOptions: { logLevel: this.options.logLevel } };
+                this.options.dataSourceOptions = { LazyBoyOptions: { logLevel: this.options.logLevel, cache: true, forceSave: true, raw: false } };
             }
             if (this.options.useAsync) {
                 this._dataSourceAsync = this.options.dataSourceAsync;

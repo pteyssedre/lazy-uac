@@ -34,7 +34,8 @@ function GetDefaultUserWithPassword(password) {
 function GenerateUac() {
     let options = {
         logLevel: index_1.LogLevel.VERBOSE,
-        useAsync: true
+        useAsync: true,
+        dataSourceOptions: { LazyBoyOptions: { cache: false, forceSave: true, raw: false } }
     };
     return new uac_1.LazyUAC.UserManager(options);
 }
@@ -161,6 +162,52 @@ describe('Module', function () {
                 let buff2 = fs.readFileSync(sourcePath);
                 let equals = buff1.toString() === buff2.toString();
                 expect(equals).to.equal(true);
+            }));
+            function WriteFileAsync(read, write) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return new Promise((resolve, reject) => {
+                        try {
+                            write.on('error', () => {
+                                return reject("error write");
+                            });
+                            write.on('end', () => {
+                                return resolve(true);
+                            });
+                            read.on('error', () => {
+                                return reject("error read");
+                            });
+                            read.on('end', () => {
+                                return resolve(true);
+                            });
+                            read.pipe(write);
+                        }
+                        catch (exception) {
+                            return reject(exception);
+                        }
+                    });
+                });
+            }
+            it('Should update avatar of user', () => __awaiter(this, void 0, void 0, function* () {
+                let avatar = yield uac.GetUserAvatarStreamAsync(mockUser.Id);
+                let downloadPath1 = path.join(__dirname, avatar.name + "_" + mockUser.Id + "." + avatar.extension);
+                let sourcePath1 = path.join(__dirname, "avatar.jpg");
+                let write = fs.createWriteStream(downloadPath1);
+                yield WriteFileAsync(avatar.data, write);
+                let buff1 = fs.readFileSync(downloadPath1);
+                let buff2 = fs.readFileSync(sourcePath1);
+                let equals1 = buff1.toString() === buff2.toString();
+                expect(equals1).to.equal(true);
+                let result = yield uac.AddAvatarAsync(mockUser.Id, "./test/avatar-2.jpg");
+                expect(result).to.equal(true);
+                let avatar2 = yield uac.GetUserAvatarStreamAsync(mockUser.Id);
+                let downloadPath2 = path.join(__dirname, avatar.name + "_" + mockUser.Id + "." + avatar.extension);
+                let sourcePath2 = path.join(__dirname, "avatar-2.jpg");
+                let write2 = fs.createWriteStream(downloadPath1);
+                yield WriteFileAsync(avatar2.data, write2);
+                let buff3 = fs.readFileSync(downloadPath2);
+                let buff4 = fs.readFileSync(sourcePath2);
+                let equals2 = buff3.toString() === buff4.toString();
+                expect(equals2).to.equal(true);
             }));
             it('Should delete the user and return a true', function () {
                 return __awaiter(this, void 0, void 0, function* () {

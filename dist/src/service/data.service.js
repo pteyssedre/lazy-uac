@@ -49,6 +49,9 @@ var DataService;
                 this.Options.LazyBoyOptions = {
                     prefix: "uac",
                     autoConnect: true,
+                    cache: true,
+                    forceSave: true,
+                    raw: false,
                     views: {}
                 };
             }
